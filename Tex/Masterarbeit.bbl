@@ -1,0 +1,56 @@
+\begin{thebibliography}{LCTE17}
+
+\bibitem[AK]{cs231n}
+Justin~Johnson Andrej~Karpathy.
+\newblock {CS231n: Convolutional Neural Networks for Visual Recognition}.
+\newblock \url{http://cs231n.github.io/}.
+\newblock Stanford CS231n lecture notes. Accessed: 2019-01-07.
+
+\bibitem[Gor17]{mlcba}
+Marco Gori.
+\newblock {\em Machine Learning: A Constraint-Based Approach}.
+\newblock Morgan Kaufmann, 2017.
+
+\bibitem[HNW93]{sodei}
+E.~Hairer, S.~P. N{\o}rsett, and G.~Wanner.
+\newblock {\em Solving Ordinary Differential Equations I (2Nd Revised. Ed.):
+  Nonstiff Problems}.
+\newblock Springer-Verlag, Berlin, Heidelberg, 1993.
+
+\bibitem[HR17]{safdnn}
+Eldad Haber and Lars Ruthotto.
+\newblock Stable architectures for deep neural networks.
+\newblock {\em CoRR}, abs/1705.03341, 2017.
+
+\bibitem[LCTE17]{mpbafdl}
+Qianxiao Li, Long Chen, Cheng Tai, and Weinan E.
+\newblock Maximum principle based algorithms for deep learning.
+\newblock {\em CoRR}, abs/1710.09513, 2017.
+
+\bibitem[LH18]{aocatdl}
+Qianxiao Li and Shuji Hao.
+\newblock An optimal control approach to deep learning and applications to
+  discrete-weight neural networks.
+\newblock {\em CoRR}, abs/1803.01299, 2018.
+
+\bibitem[Pin93]{ocatcov}
+E.R. Pinch.
+\newblock {\em Optimal Control and the Calculus of Variations}.
+\newblock OUP Oxford, 1993.
+
+\bibitem[Pon87]{mtoop}
+L.S. Pontryagin.
+\newblock {\em Mathematical Theory of Optimal Processes}.
+\newblock Classics of Soviet Mathematics. Taylor \& Francis, 1987.
+
+\bibitem[Sag]{os}
+Sebastian Sager.
+\newblock {Optimale Steuerung}.
+\newblock Lecture notes. OvGU Magdeburg. Accessed: 2016-03-11 (unpublished).
+
+\bibitem[Tob]{ngd}
+Lutz Tobiska.
+\newblock {Numerik gewöhnlicher Differentialgleichungen}.
+\newblock Lecture notes. OvGU Magdeburg. Accessed: 2015-10-21 (unpublished).
+
+\end{thebibliography}

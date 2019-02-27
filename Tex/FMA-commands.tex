@@ -1,0 +1,24 @@
+% zus�tzliche LaTeX-Umgebungen und -Kommandos
+% bei Bedarf aendern/erg�nzen
+%
+% Definition von Umgebungen -----------------------------
+\newtheorem{theorem}{Theorem}[chapter]
+%\newtheorem{theorem}{Theorem}[section]   % falls scrartcl
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{defi}{Definition}[chapter]
+%\newtheorem{defi}{Definition}[section]   % falls scrartcl 
+\newtheorem{example}{Beispiel}[chapter]
+%\newtheorem{example}{Beispiel}[section]  % falls scrartcl
+%---------abkuerzenden Kommandos----------------------
+%\newcommand{\qed}{\qquad \hfill \fbox{}\\}
+\newcommand{\qede}{\qquad \hfill \fbox{}}
+\newcommand{\ew}{\mbox{\textbf{E}}}
+\newcommand{\var}{\mbox{\textbf{Var}}}
+\newcommand{\cov}{\mbox{\textbf{Cov}}}
+\newcommand{\cor}{\mbox{\textbf{Corr}}}
+\newcommand{\wra}{$(\Omega,\mathfrak{A},P)$ }
+\newcommand{\A}{\mathfrak{A}}
+\newcommand{\F}{\mathfrak{F}}
+\newcommand{\D}[1]{\, \mathrm{d} #1}   % Integral d gerade Bsp.: dx --> \D{x}
+\newcommand{\zB}{\mbox{z.\,B.}\xspace}
+\newcommand{\dH}{\mbox{d.\,h.}\xspace}

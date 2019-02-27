@@ -1,0 +1,556 @@
+% Otto-von-Guericke-Universit�t Magdeburg
+% Fakult�t f�r Mathematik
+%
+% Vorschlag zur Gestaltung von Abschlussarbeiten mit LaTeX
+%
+%
+\documentclass[a4paper, 12pt]{scrreprt} % KOMA-Script-Report
+%
+%\documentclass[a4paper, 12pt]{scrartcl} % KOMA-Script-Article 
+%                                        (dann keine \chapter m�glich!!!)
+%                                        (erfodert Anpassung in FMA-commands.tex) 
+%----LaTeX-Pakete-----------------
+\usepackage[ngerman, american]{babel}   %andersherum, also "ngerman, american" sind die Ueberschriften in Englisch
+%\usepackage[latin1]{inputenc} % Quelltext mit Umlauteingabe
+\usepackage[utf8]{inputenc} % alternativ Quelltext von Windows-PC[ansinew]
+\usepackage{geometry}
+\geometry{twoside, outer=25mm, inner=30mm, top=30mm, bottom=30mm} % zweiseitig
+% \geometry{outer=25mm, inner=30mm, top=30mm, bottom=30mm}        % einseitig
+\usepackage{latexsym}                                             % spezielle Mathematik-Symbole
+\usepackage{graphicx}                                             % zum Einbinden von Bildern
+\usepackage{amsmath, amssymb, amsthm}                             % LaTeX-Erweiterungen der AMS
+\usepackage{harvard}                                              % fuer Beispiel-Literaturverzeichnis
+
+% ----Einbinden von pdf-Dateien oder einzelnen Seiten daraus
+\usepackage{pdfpages}
+\usepackage{xspace}
+\usepackage{setspace}                                             % zum Variieren des Zeilenabstandes
+% Anwendung im Text:  \includepdf[pages={7, 9-12}]{Name der pdf-Datei}
+%------
+\setkomafont{disposition}{\normalfont\bfseries}%rmfamily
+% Kopf- und Fu�zeilen mit scrpage2 ---------------*Beginn*------------
+\usepackage[automark,headsepline]{scrpage2}
+\automark[section]{chapter}
+\pagestyle{scrheadings}			
+\clearscrheadfoot
+\ihead[]{\headmark}
+\cfoot[ \thepage{} ]{ \thepage{} }
+\setkomafont{pagefoot}{%
+% Kopf- und Fu�zeilen mit scrpage2 ---------------*Ende* --------------
+\normalfont\rmfamily}
+\setlength{\parindent}{0cm}
+\setcounter{tocdepth}{4}              % 4 Gliederungsebenen in das Inhaltsverzeichnis
+\setcounter{secnumdepth}{3}           % 4 (!) Gliederungsebenen werden nummeriert(0-3) 
+\input{FMA-commands}        		      % hilfreiche LaTeX-Befehlsabk�rzungen
+\usepackage{acronym}
+\usepackage{cite}
+\usepackage{subfigure}
+\usepackage{multicol}
+\usepackage{framed} 
+\usepackage{listings}
+\usepackage{color}
+\usepackage{scrhack}
+\usepackage{url}
+\usepackage[short]{optidef}
+% ------------------------------------------------------------------------------
+%
+%##################################################################################################
+\begin{document}
+
+\definecolor{mylilas}{RGB}{170,55,241}
+\definecolor{mygreen}{rgb}{0,0.6,0}
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[chapter]
+\newtheorem{myExample}[definition]{Example}
+\newtheorem{remark}[definition]{Remark}
+\theoremstyle{plain}
+\newtheorem{myLemma}[definition]{Lemma}
+\newtheorem{myTheorem}[definition]{Theorem}
+\newtheorem{corollar}[definition]{Corollar}
+
+\lstset{
+	% extendedchars=true,      	% funktioniert nicht mit utf-8 �frown�-Emoticon
+	basicstyle=\tiny,        % the size of the fonts that are used for the code
+	%breaklines=true,
+	numbers=left,
+	language=Matlab,
+	numbersep=10pt,            	% how far the line-numbers are from the code
+  numberstyle=\tiny, 					% the style that is used for the line-numbers
+	stepnumber=1,
+	%frame=single,	                   % adds a frame around the code
+	breaklines=true,                 % sets automatic line breaking
+	tabsize=2,
+	commentstyle=\color{mygreen},    % comment style
+	identifierstyle=\color{black},%
+  stringstyle=\color{mylilas}}
+
+\pagenumbering{Roman}
+\newtheorem{Def}{Definition}
+\input{Titelseite}
+\clearpage
+\cleardoublepage
+\tableofcontents
+\clearpage
+
+\addcontentsline{toc}{section}{Abbreviations}
+\chapter*{Abbreviations}
+\begin{acronym}
+	\acro{CNN}{Convolutional Neural Network}
+	\acro{IVP}{Initial Value Problem}
+	\acro{NN}{Neural Network}
+	\acro{OCP}{Optimal Control Problem}
+	\acro{ODE}{Ordinary Differential Equation}
+	\acro{PMP}{Pontryagin Maximum Principle}
+	\acro{RNN}{Residual Neural Network}
+	
+\end{acronym}
+
+\clearpage
+
+\addcontentsline{toc}{section}{List of Figures}
+\listoffigures
+
+\cleardoublepage
+
+\pagenumbering{arabic}
+\setcounter{page}{1}      %Beginn der Textseitenzaehlung
+% -----------------------------------------------------------------------------------------
+% hier beginnen die einzelnen Kapitel der Arbeit
+% -----------------------------------------------------------------------------------------
+
+
+% -----------------------------------------------------------------------------------------
+% Einleitung
+% -----------------------------------------------------------------------------------------
+
+\chapter{Introduction}
+\label{chap:Introduction}
+
+% -----------------------------------------------------------------------------------------
+% Mathematische Voraussetzungen
+% -----------------------------------------------------------------------------------------
+
+\chapter{Mathematical Prerequisites}
+\label{chap:MaPr}
+In this chapter we will summarize the necessary definitions and theorems from numerical analysis and optimal control.
+
+\section{Numerical Analysis}
+The definitions of this section are primarily based on \cite{sodei} and \cite{ngd}.
+\begin{definition}[Ordinary Differential Equation]
+Let $f:\mathbb R \times \mathbb R^n \to \mathbb R^n$ be a function. The equation
+\begin{equation}
+\dot{x} = f(t,x)
+\label{eq:ODE}
+\end{equation}
+is called \emph{\ac{ODE}}. $x(t):\mathbb R \to \mathbb R^n$ is a \emph{solution} of the \ac{ODE} in the interval $[t_0, T]$ if
+\begin{equation}
+\dot x(t) = f\left(t,x(t)\right), \forall t \in [t_0, T]
+\label{eq:ODE2}
+\end{equation}
+is satisfied.
+\end{definition}
+
+\begin{definition}[Initial Value Problem]
+An \ac{ODE} with an additional initial value condition 
+\begin{align}
+\label{eq:ivp}
+\begin{split}
+\dot{x}(t) &= f(t, x(t)), \hspace{0.5cm} \forall t \in [t_0, T]\\
+x(t_0) &= \bar x_0
+\end{split}
+\end{align}
+is called \emph{\ac{IVP}}.
+\end{definition}
+
+\begin{definition}[Stability]
+Let $\dot x(t) = f\left(t,x(t)\right)$ be an \ac{ODE} and $x_0, \tilde{x}_0$ initial values with the corresponding solutions $x(t), \tilde{x}(t)$ of the \ac{ODE}. The \ac{ODE} is called \emph{stable} if for every $\epsilon > 0$ there exists a $\delta > 0$ such that
+\begin{equation}
+\Vert x_0 - \tilde{x}_0 \Vert < \delta \Rightarrow \Vert x(t) - \tilde{x}(t) \Vert < \epsilon \hspace{0.5cm} \forall t > t_0
+\label{eq:Stab}
+\end{equation}
+\end{definition}
+
+Stability describes the property, that solutions of the same \ac{ODE} with different initial values are close to each other if the initial values are close to each other. A slightly weaker formulation of stability is derived in the following lines, providing a criterion which can be used in chapter \ref{chap:AotPS}.
+
+For two solutions $x(t), \tilde{x}(t)$ of $\dot x(t) = f\left(t,x(t)\right)$ let $y(t) := x(t) - \tilde{x}(t)$ be the difference of the solutions. If $y(t)$ is bounded, the \ac{ODE} is stable.
+\begin{align*}
+\dot{y}(t) &= \dot{x}(t) - \dot{\tilde{x}}(t) \\
+ &= f\left(t,x(t)\right) - f\left(t,\tilde{x}(t)\right)
+\end{align*}
+with the Taylor expansion of $f$ in $\tilde{x}(t)$ we have 
+\begin{equation*}
+f(t,x(t)) = f(t,\tilde{x}(t)) + f_x(t,\tilde{x}(t)) y(t) + \dots
+\end{equation*}
+Inserting this gives
+\begin{equation}
+\dot{y}(t) = f_x(t,\tilde{x}(t)) y(t) + \dots
+\label{eq:ODEStab}
+\end{equation}
+A discretization $t_0 < t_1 < \dots < t_m = T$ of the time horizon and a piecewise constant approximation $J_{t_i}$ of the Jacobian $f_x(t,\tilde{x}(t))$ for $t \in [t_i,t_{i+1})$ yields the linear \acp{ODE} 
+\begin{equation*}
+\dot y(t) = J_{t_i} y(t), \hspace{0.5cm} \forall t \in [t_i, t_{i+1}), i = 0, \dots, m-1
+\end{equation*}
+The solutions to these \acp{ODE} can be given explicitly via the eigenvalues of the $J_{t_i}$ as can be seen in \cite{sodei}, with the solutions being bounded if the real part of the eigenvalues is negative. 
+
+\begin{definition}[Weak Stability]
+The \ac{ODE} $\dot x(t) = f\left(t,x(t)\right)$ is called \emph{weakly-stable} on the time interval $[t_0,T]$, if for a given discretization $t_0 < t_1 < \dots < t_m = T$ and approximations $J_{t_i}$ of the Jacobi matrix $f_x(t,x(t))$ on $[t_i, t_{i+1})$ the following holds:
+\begin{align}
+\underset{j=1,\dots,k}{max} \Re (\lambda_j(J_{t_i})) &\leq  0, \hspace{0.5cm} i=0, \dots, m-1 \\
+\underset{l=k+1,\dots,n}{max} \Re (\lambda_l(J_{t_i})) &<  0, \hspace{0.5cm} i=0, \dots, m-1
+\label{eq:stab2}
+\end{align}
+with $\lambda_j(J_{t_i})$ being a singular eigenvalue of $J_{t_i}$ for $j=1,\dots,k$ and $\lambda_l(J_{t_i})$ being a nonsingular eigenvalue of $J_{t_i}$ for $l=k+1,\dots,m$.
+\end{definition}
+
+Plenty of methods for solving \acp{IVP} exist, with the forward Euler method being one of the simplest. It can be motivated by using finite differences for approximating the derivative in discrete time points $t_0 < t_1 < \dots < t_m = T$:
+\begin{equation*}
+\dot x(t_k) \approx \frac{x_{k+1}- x_k}{h_k} = f(t_k, x_k) 
+\end{equation*}
+$x_k$ denotes the approximation of $x(\cdot)$ at time $t_k$ and $h_k := t_{k+1}-t_k$.
+
+\begin{definition}[Forward Euler Method]
+The \emph{forward Euler method} for the \ac{IVP} \ref{eq:ivp}, with the discretization $t_0 < t_1 < \dots < t_m = T$ of $[t_0,T]$ is defined as
+\begin{equation}
+x_{k+1} = x_k + h_k f(t_k,x_k), \hspace{0.5cm} k=0,\dots, m-1
+\label{eq:fweul}
+\end{equation}
+with $h_k := t_{k+1}-t_k, k=0,\dots,m-1$, $x(t_k) \approx x_k, k=1,\dots,m$ and $x_0 = \bar x_0$. 
+\end{definition}
+
+\section{Optimal Control}
+This section is mainly based on \cite{ocatcov} and \cite{os}. In optimal control the aim is to minimize (or maximize) a given cost-function, depending on the state variables $x(t)$, with the choice of the control function $u(t)$.
+% The $u(t)$ is chosen such that certain constraints are fulfilled. 
+The state variables $x(t): [t_0,T] \to \mathbb{R}^{n_x}$ can be determined via the solution of a \ac{ODE}
+\begin{equation}
+\dot x(t) = f(x(t),u(t)), \hspace{0.5cm} \forall t \in [t_0, T]
+\label{eq:odeocp}
+\end{equation} 
+with given controls $u(t): [t_0,T] \to \mathbb{R}^{n_u}$ and an initial condition $x(t_0) = \bar x_0$. 
+
+
+\begin{definition}[Cost-Function]
+Let $x(t):[t_0,T]\to \mathbb R^{n_x}$ be state variables, determined by solving the \ac{ODE} (\ref{eq:odeocp}) with fixed controls $u(t): [t_0,T] \to \mathbb{R}^{n_u}$. 
+The \emph{cost-function} $J(x,u)$ is written as:
+\begin{equation}
+J(x,u) = E(x(T)) + \int_{t_0}^T L(t,x(t),u(t)) \mathrm{d}t
+\label{eq:costfunc}
+\end{equation}
+with the \emph{Mayer-term} $E(x(T))$ and the \emph{Lagrange-term} $\int_{t_0}^T L(t,x(t),u(t)) \mathrm{d}t$.
+\end{definition}
+
+Through a combination of the cost-function (\ref{eq:costfunc}), the \ac{ODE} (\ref{eq:odeocp}) and other constraints, we derive the formulation of an \ac{OCP}.
+
+\begin{definition}[Optimal Control Problem]
+Let $x(t):[t_0,T]\to \mathbb R^{n_x}$ be state variables and $u(t): [t_0,T] \to \mathbb{R}^{n_u}$ be sufficient smooth, bounded controls. The \emph{\acl{OCP}} is defined as
+\begin{mini}
+{x,u}{E(x(T)) + \int_{t_0}^T L(x(t),u(t)) \mathrm{d}t} {\label{opt:ocp}} {}
+\addConstraint{\dot x(t)}{= f(x(t),u(t))}{\hspace{0.5cm}\forall t \in [t_0, T]}
+\addConstraint{x(t_0)}{= \bar x_0}{}
+\addConstraint{x(T)}{= \bar x_T}{}
+\addConstraint{u(t)}{\in \Omega \subseteq \mathbb R^{n_u}}{\hspace{0.5cm}\forall t \in [t_0, T]}
+\end{mini}
+\end{definition}
+
+%\begin{equation}
+%\label{eq:ocp}
+%\begin{aligned}
+%&\underset{x,u}{min}& &E(x(T)) + \int_{t_0}^T L(t,x(t),u(t)) \mathrm{d}t & &\\
+%& s.t.&  \dot x(t) &= f(x(t),u(t)), &\forall t \in [t_0, T] \\
+%& &x(t_0) &= x_0 \\
+%& &x(T) &= x_T \\
+%& &u(t) &\in \Omega \subseteq \mathbb R^{n_u}, &\forall t \in [t_0, T]
+%\end{aligned}
+%\end{equation}
+
+For solving the \ac{OCP} (\ref{opt:ocp}) necessary conditions for optimality can be formulated. We will look at the \ac{PMP} as such a set of conditions. Additionally the discrete time version of the \ac{PMP} will be considered.
+
+\begin{definition}[Hamilton-Function]
+The \emph{Hamilton-Function} $H:\mathbb R^{n_x} \times \mathbb R^{n_u} \times\mathbb R^{n_x} \to \mathbb R$ of problem (\ref{opt:ocp}) writes
+\begin{equation}
+H(x,u,\lambda) := \lambda^T f(x,u) - L(x,u)
+\label{eq:hamfunc}
+\end{equation}
+\end{definition}
+
+\begin{myTheorem}[Pontryagin Maximum Principle]
+Let $(x^*,u^*)$ be an optimal solution to problem \ref{opt:ocp}. Then a co-state process $\lambda^*:[t_0,T] \to \mathbb R^{n_x}$ exists, such that
+\begin{align}
+1.&\hspace{0.2cm} \dot x^*(t) =  \frac{\partial H}{\partial \lambda}(x^*(t),u^*(t),\lambda^*(t))^T &\forall t \in [t_0,T] \\
+2.&\hspace{0.2cm} x^*(t_0) = \bar x_0 \\
+3.&\hspace{0.2cm} \dot \lambda^*(t) = - \frac{\partial H}{\partial x}(x^*(t),u^*(t),\lambda^*(t))^T & \forall t \in [t_0,T] \\
+4.&\hspace{0.2cm} \lambda^*(T) = \frac{\partial E}{\partial x}(x^*(T))^T \\
+5.&\hspace{0.2cm} H(x^*(t),u^*(t),\lambda^*(t)) \geq H(x^*(t),u,\lambda^*(t)) & \forall u \in \Omega, \forall t \in [t_0,T]
+\end{align}
+\end{myTheorem}
+
+The proof of the \ac{PMP} can be found in \cite{mtoop}.\newline
+
+For the time discrete \ac{PMP} let $t_0 < t_1 < \dots < t_m = T$ be a discretization of $[t_0,T]$. A time discrete formulation of the \ac{OCP} (\ref{opt:ocp}) reads as follows
+\begin{mini}
+{\substack{x_1, \dots, x_m \\ u_0, \dots, u_{m-1}}}{E(x_m) + \sum_{k=0}^{m-1} L(x_k,u_k)} {\label{opt:ocpdt}} {}
+\addConstraint{x_{k+1}}{= F(x_k,u_k)}{\hspace{0.5cm}\forall k = 0,\dots,m-1}
+\addConstraint{x_0}{= \bar x_0}{}
+\addConstraint{u_k}{\in \Omega \subseteq \mathbb R^{n_u}}{\hspace{0.5cm}\forall k=0,\dots,m}
+\end{mini}
+
+
+\begin{myTheorem}[Pontryagin Maximum Principle in discrete time]
+Let $x^*=\{x_0^*, \dots,x_m^*\}$, $x^*_k \in \mathbb R^{n_x}$, $k = 0,\dots, m$, $u^* = \{u_0^*, \dots,u_{m-1}^*\}$, $u_k^*\in \Omega$, $k = 0, \dots, m-1$ and $(x^*,u^*)$ be an optimal solution to problem (\ref{opt:ocpdt}). Then a co-state process $\lambda^* = \{\lambda_0^*, \dots, \lambda_m^*\}$, $\lambda^*_k \in \mathbb R^{n_x}$, $k=0,\dots,m$ exists, such that
+\begin{align}
+1.&\hspace{0.2cm} x^*_{k+1} =  \nabla_{\lambda_{k+1}} H(x^*_k,u^*_k,\lambda^*_{k+1}) &k=0,\dots,m-1 \\
+2.&\hspace{0.2cm} x^*_0 = \bar x_0 \\
+3.&\hspace{0.2cm} \lambda^*_k = \nabla_{x_k} H(x^*_k,u^*_k,\lambda^*_{k+1}) & k=m-1, \dots, 0 \\
+4.&\hspace{0.2cm} \lambda^*_m = - \nabla_{x_m} E(x^*_m) \\
+5.&\hspace{0.2cm} H(x^*_k,u^*_k,\lambda^*_{k+1}) \geq H(x^*_k,u,\lambda^*_{k+1}) & \forall u \in \Omega, k = 0,\dots, m-1
+\end{align}
+\end{myTheorem}
+
+These prerequisites will be used in chapter \ref{chap:NNLaOCP} and chapter \ref{chap:AotPS}.
+% -----------------------------------------------------------------------------------------
+% Aufbau von Neuronalen Netzen
+% -----------------------------------------------------------------------------------------
+
+\chapter{Neural Network Architectures}
+\label{chap:NNA}
+The aim of the \acfp{NN} in this chapter is to minimize the difference between the network prediction $\mathcal{N}(x)$ and an output $y$ with respect to a given loss function. The output is associated with a given input as a pair $(x,y)$. 
+
+At first we will have a look at a neural network definition motivated by graphs. Further we will see a different formulation and different architectures of neural networks. The overview will be limited to feedforward \acp{NN}.
+
+\begin{definition}[Feedforward Neural Network]
+A \emph{$T$-layer feedforward \acl{NN}} is a directed acyclic graph (DAG) with vertices $V = V_0 \hspace{0.1cm}\dot \cup\hspace{0.1cm} V_1 \hspace{0.1cm}\dot \cup \cdots \dot \cup\hspace{0.1cm} V_{T-1} \hspace{0.1cm}\dot \cup \hspace{0.1cm}V_T \dot \cup\hspace{0.1cm} B$ and edges $E \subseteq \{(v, u) \mid v \in V_i, u \in V_j, i < j\} \cup \{(b_i,v) \mid b_i \in B, v \in V_{i}, i \in \{1, ..., T\}\}$. The vertex set $V_0$  is called \emph{input-layer}, the $V_1, ..., V_{T-1}$ are called \emph{hidden-layers} and $V_T$ is called \emph{output-layer}. The vertices $b_i \in B$ are named \emph{biases}. A weight $w_e \in \Omega$ is assigned to each $e \in E$.
+
+% It holds that $\delta_{in}\(v_0\)=0$ and $\delta_{out}\(v_0\) \neq 0$ for all $v_0 \in V_0$, $\delta_{in}\(v_i\) \neq 0$ and $\delta_{out}\(v_i\) \neq 0$ for all $v_i \in V_i, i \in \{1, ..., T-1\}$ and  $\delta_{in}\(v_T\) \neq 0$ and $\delta_{out}\(v_T\) = 0$ for all $v_T \in V_T$.
+\end{definition}
+
+In the forward propagation in a \ac{NN} an \emph{activation function} $\sigma(\cdot)$ is assigned to each vertex in the hidden-layers. The output $o(v)$ for a vertex $v$ is given by: 
+\begin{equation}
+\label{actFct}
+o(v) = \sigma\left(\sum\limits_{\substack{e \in E :\\ e = (u,v)}} w_e o(u)\right)
+\end{equation}
+
+Some examples for activation functions:
+\begin{itemize}
+	\item Sigmoid: $\sigma_{sig}(x) = \frac{1}{1+e^{-x}}$
+	\item Hyperbolic tangent: $\sigma_{tanh}(x) = tanh(x) = \frac{e^x-e^{-x}}{e^x+e^{-x}}$
+	\item ReLU: $\sigma_{ReLU}(x) = \begin{cases} x, & x \geq 0 \\ 0, & x < 0\end{cases}$
+\end{itemize}
+
+Example of a feedforward \ac{NN}.
+
+
+\section{Residual Neural Networks}
+\label{sec:RNN}
+
+\begin{definition}[Shortcut Connections and Residual Neural Networks]
+An edge $e = (v,u) \in E$ is called a \emph{Shortcut Connection} if $v \in V_i, u \in V_j$ and $j \geq i+2$. The difference $d_e := j-i$ is the degree of the shortcut connection. 
+A feedforward \ac{NN} $\mathcal{N}$ is called \emph{Residual} with a degree of $d_\mathcal{N}$ if all shortcut connections $e$ in $\mathcal{N}$ are of degree $d_e = d_\mathcal{N}$ and $w_e = 1$.
+
+% A Feedforward Neural Network is called \emph{simple} if  $E \subseteq \{\(v, w\) \mid v \in V_i, w \in V_{i+1}, i \in {0, ..., T-1}\} \cup \{\(b_i,v\) \mid b_i \in B, v \in V_{i+1}, i \in {0, ..., T-1}\}$. It is called \emph{residual}, if 
+\end{definition}
+
+Example of a \ac{RNN} with degree 2 (ResNet).
+
+Apart from graphs we will now look at \acp{NN} as functions of the input $x$.
+
+\section{Neural Networks as Functions}
+\label{sec:NNaF}
+
+\begin{definition}[Feedforward Neural Networks as Functions]
+A \emph{feedforward \ac{NN}} can be seen as a function $\mathcal{N}:\mathbb{R}^{n_x} \to \mathbb{R}^{n_y}$ with
+\begin{equation}
+\mathcal{N}(x) := \tilde{\sigma}_T(\tilde{W}_T \tilde{\sigma}_{T-1}(\tilde{W}_{T-1} \dots \tilde{\sigma}_1(\tilde{W}_1 \tilde{x}) \dots ))
+\label{eq:1}
+\end{equation}
+where $\tilde{x}$ is a vector containing the input $x$ and the biases $b$, the $\tilde{W}_i$ are matrices containing the weights for layer $i$ and an identity part for the shortcut connections and the biases $b_{i+1}$ to $b_{T}$, $i \in {1, \dots, T}$. The $\tilde{\sigma}_i$ are functions containing the activation functions $\sigma_i$ and identity functions for the shortcut connections and the biases. 
+\end{definition}
+
+The following example clarifies the structure of $\tilde{x}$, the $\tilde{W}_i$ and the $\tilde{\sigma}_i$:
+%To clarify the structure of $\tilde{x}$, the $\tilde{W}_i$ and the $\tilde{\sigma}_i$ we look at the following example:
+
+\begin{myExample}[Two Layer Neural Network as Function]
+
+Consider the following two-layer \ac{NN} with input-layer $x$, hidden-layer $h$ and output-layer $y$. For each vertex the output is identified with the name of the vertex.\newline
+$
+\tilde{x}=\begin{pmatrix}
+	x_1 \\ x_2 \\ b_1 \\ b_2
+\end{pmatrix}, 
+\tilde{W}_1 = \begin{pmatrix}
+	w_{1 3} & w_{2 3} & w_{b_1 3} & 0 \\
+	w_{1 4} & w_{2 4} & w_{b_1 4} & 0 \\
+	w_{1 5} & w_{2 5} & w_{b_1 5} & 0 \\
+	1 & 0 & 0 & 0 \\
+	0 & 0 & 0 & 1
+\end{pmatrix}, 
+\tilde{h}^p = \tilde{W}_1 \tilde{x} = \begin{pmatrix}
+	x_3^p \\ x_4^p \\ x_5^p \\ x_1 \\ b_2
+\end{pmatrix}, \\
+\tilde{h} = \tilde{\sigma}_1(\tilde{h}^p) = \begin{pmatrix}
+	\sigma_1(x_3^p) \\ \sigma_1(x_4^p) \\ \sigma_1(x_5^p) \\ x_1 \\ b_2 
+\end{pmatrix} = \begin{pmatrix}
+	x_3 \\ x_4 \\ x_5 \\ x_1 \\ b_2
+\end{pmatrix},
+\tilde{W}_2 = \begin{pmatrix}
+	w_{3 1} & w_{4 1} & w_{5 1} & w_{1 1} & w_{b_2 1}  \\
+	w_{3 2} & w_{4 2} & w_{5 2} & 0 & w_{b_2 2}  
+\end{pmatrix}, \\
+y^p = \tilde{W}_2 \tilde{h} = \begin{pmatrix}
+	y_1^p \\ y_2^p
+\end{pmatrix},
+y = \tilde{\sigma}_2(y^p) = \begin{pmatrix}
+	\sigma_2(y_1^p) \\ \sigma_2(y_2^p)
+\end{pmatrix} = \begin{pmatrix}
+	y_1 \\ y_2
+\end{pmatrix}
+%\label{eq:2}
+$
+\end{myExample} 
+
+\begin{myLemma}
+The forward propagation in a \ac{NN} can be written as:
+\begin{align*}
+\mathcal{N}(x) &= x_T \\
+x_{k+1} &= f_{k}(x_{k},\bar{W}_{k}) , \hspace{0.5cm}k = 0, \dots, T-1 \\
+x_0 &= \bar{x} 
+\end{align*}
+where the subscripts denote the layer and not an entry of a vector.
+\end{myLemma}
+\begin{proof}
+With the choices $\bar{x} = \tilde{x}$, $\bar{W}_k = \tilde{W}_{k+1}$ and $f_k(x_k,\bar{W}_k)=\sigma_{k+1}(\bar{W}_k x_k)$ for $k=0, \dots, T-1$, the claim follows directly from recursive insertion of the $x_k$.
+\end{proof}
+
+
+\section{Convolutional Neural Networks}
+\label{sec:CNN}
+In the last section of this chapter we will look at \acp{CNN}. \acp{CNN} are specialized for image classification and consist of different types of layers. The input images can be seen as a $n_{px} \times n_{py} \times n_c$ hypermatrices with $n_{px} \times n_{py}$ pixels and $n_c$ channels. The channels contain for example different color information of the image. This section is mainly based on \cite{cs231n}.
+
+The architectures of \acp{RNN} and \acp{CNN} can be combined.
+
+\subsection{Convolutional Layer}
+\label{subsec:CL}
+The convolutional layers are the main functionality of \acp{CNN}. For each layer there are hyperparameters such as the \emph{stride} $s \in \mathbb{N}$, a \emph{zero-padding} $p \in \mathbb{N}_0$, the number $d\in \mathbb{N}$ of  filters and their spatial size $n_f$. A filter $F$ can be interpreted as a hypermatrix with dimensions $n_f \times n_f \times n_c, n_f \in 2\mathbb{N}+1, n_c \in \mathbb{N}$. 
+
+The stride specifies the number of pixels a filter is shifted while it slides over the image. The number of zeros that are padded around the input image is given by the zero-padding, while the number of filters determines the number of channels in the output.
+
+The weights $F_{j,k,l} \in \mathbb{R} $ for $j,k \in [n_f], l \in [n_c]$ of a filter $F$ are learnable parameters.\newline
+
+\begin{definition}[Convolution]
+Let $I,F \in \mathbb{R}^{n\times m \times c}$  be hypermatrices. Then the \emph{convolution} $*:\mathbb{R}^{n\times m \times c}\times \mathbb{R}^{n\times m \times c} \to \mathbb{R}$ of $I$ and $F$ is defined as follows:
+\begin{equation*}
+I*F := \sum\limits_{j=1}^{n} \sum\limits_{k=1}^{m} \sum\limits_{l=1}^{c} I_{j,k,l}F_{j,k,l}
+%\label{eq:3}
+\end{equation*}
+\end{definition}
+
+The next definition shows how the convolution of an image with $d$ filters and stride $s$ works.
+\begin{definition}[Image Convolution]
+Let $I \in \mathbb{R}^{n_{px} \times n_{py} \times n_c}$ be an image, $F_1,\dots, F_d \in \mathbb{R}^{n_f \times n_f \times n_c}$ be  filters and $s \in \mathbb{N}$ the stride. The convolution $I^c := I *_s [F_1, \dots, F_d]$ of $I$ with the filters $F_1,\dots, F_d$ and stride $s$ is given by: 
+\begin{equation*}
+{I^c}_{j,k,l} := I_{J,K,L} * F_l, \hspace{0.5cm}\forall (j,k,l) \in \left(\frac{n_{px}-n_f+2p}{s+1}\right)\times \left(\frac{n_{py}-n_f+2p}{s+1}\right)  \times d
+%I_{[(i-1)s+1:(i-1)s+n_f], [(j-1)s+1:(j-1)s+n_f], [1:n_c]} * F_k
+%\label{eq:5}
+\end{equation*}
+where $I_{J,K,L}$ is a $n_f \times n_f \times n_c$ sub-hypermatrix of $I$ and $J:=\{(j-1)s+1,\dots,(j-1)s+n_f\}, K:=\{(k-1)s+1,\dots,(k-1)s+n_f\}, L:=\{1, \dots, n_c\}$.
+%$I_{[a+1:a+n_f],[b+1:b+n_f],[1:n_c]}$
+\end{definition}
+
+%An image of size $n_{px} \times n_{py}$ with $n_c$ channels gets convolved to an image of size $\left(\frac{n_{px}-n_f+2p}{s+1}\right)\times \left(\frac{n_{py}-n_f+2p}{s+1}\right)$ with $d$ channels.
+
+
+\subsection{Pooling Layer}
+\label{subsec:PL}
+Pooling layers are inserted between convolutional layers for subsampling of the image and therefore reducing the amount of learnable parameters in the following layers. They also help to reduce the risk of overfitting.
+
+As hyperparameters there are the spatial size $n_f$ of a pooling filter and the stride $s$.
+
+\begin{definition}[Pooling]
+Let $I \in \mathbb{R}^{n\times m \times c}$  be a hypermatrix and $\phi : \mathbb{R}^{n_f \times n_f} \to \mathbb{R}$ a pooling-function. Then the \emph{pooling} $I^p$ of $I$ is defined via
+\begin{equation*}
+I^p_{j,k,l}:=\phi(I_{J,K,l}), \hspace{0.5cm} \forall (j,k,l) \in \left(\frac{n-n_f}{s}+1\right) \times \left(\frac{m-n_f}{s}+1\right) \times c
+%\label{eq:}[(i-1)s+1:(i-1)s+n_f],[(j-1)s+1:(j-1)s+n_f]
+\end{equation*}
+where $I_{J,K,l}$ is a $n_f \times n_f \times 1$ sub-hypermatrix of $I$ and $J:=\{(j-1)s+1,\dots,(j-1)s+n_f\}, K:=\{(k-1)s+1,\dots,(k-1)s+n_f\}$.
+\end{definition}
+
+%Given an image of size $n_{px} \times n_{py} \times n_c$ the pooling produces an output of size $\left(\frac{n_{px}-n_f}{s}+1\right) \times \left(\frac{n_{py}-n_f}{s}+1\right) \times n_c$. \newline
+
+In practice different pooling-functions are used with max-pooling being the most popular. Some examples of pooling-functions:
+\begin{itemize}
+	\item Max-pooling: $\phi(I) = \underset{j \in [n],k \in [m]}{max}\{I_{j,k}\}, I\in \mathbb{R}^{n\times m}$ 
+	\item Average-pooling: $\phi(I) = \frac{\sum\limits_{j=1}^{n}\sum\limits_{k=1}^{m}{I_{j,k}}}{nm}, I\in \mathbb{R}^{n\times m}$
+\end{itemize}
+
+Through the pooling no additional learnable parameters are added.
+
+\subsection{Activation Layer}
+\label{subsec:AL}
+The activation-functions we introduced in \ref{actFct} are also important in \acp{CNN}. They perform elementwise operations but we seperate them from the convolutional layers for better clarity.
+
+An activation layer needs no additional learnable parameters.
+
+example structure: conv->relu->conv->relu->pool->...
+
+\subsection{Fully-Connected Layer}
+\label{subsec:FCL}
+The last part of a \ac{CNN} consists of fully connected layers. This fully connected part is equivalent to a feedforward neural network without shortcut connections and the output of the last previous layer (e.g. pooling layer or activation layer) as input. 
+
+Example of a complete \ac{CNN}.
+
+
+% -----------------------------------------------------------------------------------------
+% Neuronale Netze als OCP
+% -----------------------------------------------------------------------------------------
+
+\chapter{Neural Network Learning as Optimal Control Problem}
+\label{chap:NNLaOCP}
+In this chapter we look at the basic concepts of \ac{NN} learning and reformulate it as an \ac{OCP}.
+
+There are two types of problems we want to solve with \acp{NN}. First, for given pairs $(x^i,y^i) \in \mathbb R^{n_x} \times \mathcal Y, i = 1,\dots,s$ the \ac{NN} should return $y^i$ when given $x^i$. This task is called classification with $n_y := \vert \mathcal Y \vert$ being the number of different classes.
+The goal of the \acp{NN} we are looking at, is to minimize the error 
+
+% -----------------------------------------------------------------------------------------
+% Analyse der Problemstruktur
+% -----------------------------------------------------------------------------------------
+
+\chapter{Analysis of the Problem Structure}
+\label{chap:AotPS}
+
+
+% -----------------------------------------------------------------------------------------
+% Numerische Ergebnisse
+% -----------------------------------------------------------------------------------------
+
+\chapter{Numerical Results}
+\label{chap:NR}
+
+
+% -----------------------------------------------------------------------------------------
+% Zusammenfassung
+% -----------------------------------------------------------------------------------------
+
+\chapter{Conclusion and Outlook}
+\label{chap:CaO}
+
+\clearpage
+\appendix
+\chapter{Appendix}
+
+
+\clearpage
+\bibliography{lit}
+\bibliographystyle{alpha}
+
+% ----------------------------------------------------------------------------------------
+\newpage
+\section*{Erklärung}		
+\thispagestyle{empty}				
+
+
+Hiermit erkläre ich, dass ich die vorliegende Arbeit selbstständig und ohne Benutzung anderer als der angegebenen Quellen und Hilfsmittel angefertigt habe.
+\newline\newline
+Ort, Datum, Unterschrift
+
+
+
+
+\end{document}
