@@ -1,0 +1,4 @@
+
+.vscode/settings.json
+Dataset/input/mnist_train.csv
+Dataset/input/mnist_test.csv

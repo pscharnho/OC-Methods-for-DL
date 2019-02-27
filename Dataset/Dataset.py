@@ -3,6 +3,8 @@ import pandas as pd
 import os
 print(os.listdir("../input"))
 import torch
+import torch.nn as nn
+import torch.nn.functional as F
 import torchvision
 import torchvision.transforms as transforms
 
@@ -28,7 +30,7 @@ class MNISTDataset(torch.utils.data.Dataset):
         for index, label in enumerate(labels):
             result[index][label]=1
         return result
-        
+
 
 def loadMNIST(root_train, root_test):
     train = MNISTDataset(root_train)
