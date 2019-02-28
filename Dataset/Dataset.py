@@ -1,7 +1,6 @@
 import numpy as np # linear algebra
 import pandas as pd
 import os
-print(os.listdir("../input"))
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
