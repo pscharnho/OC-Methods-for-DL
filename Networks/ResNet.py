@@ -8,6 +8,7 @@ import torch.nn.functional as F
 import torchvision
 import torchvision.transforms as transforms
 import timeit
+from Layers.Layers import MSALinearLayer
 
 
 
@@ -19,10 +20,18 @@ class BasicVarConvNet(nn.Module):
         self.subs_points = subs_points
         
         self.conv_keys = ['Conv'+str(i) for i in range(num_conv)]
-        self.fc_keys = ['FC'+str(i) for i in range(num_fc)]
+        self.fc_keys = ['FC'+str(i) for i in range(num_fc+1)]
+
+        self.layers_dict = {}
+        self.x_dict = {}
+        self.lambda_dict = {}
+        self.batch_element = None
         
         self._init_conv_layers(num_kernels)
-        num_pix = num_kernels[-1] * 784 / (4**len(subs_points))
+        if num_conv != 0:
+            num_pix = num_kernels[-1] * 784 / (4**len(subs_points))
+        else:
+            num_pix = None
         self._init_fc_layers(sizes_fc, num_pix)
         #self._init_conv_subs_layers(num_kernels)
         #keys = ['Conv'+str(i) for i in range(self.num_conv)]
@@ -36,19 +45,25 @@ class BasicVarConvNet(nn.Module):
         for i in range(self.num_conv):
             if i in self.subs_points:
                 num_kernel_counter += 1
-                setattr(self, self.conv_keys[current_key], nn.Conv2d(channels, num_kernels[num_kernel_counter], 3, stride=2, padding=1))
+                self.layers_dict.update({self.conv_keys[current_key]:nn.Conv2d(channels, num_kernels[num_kernel_counter], 3, stride=2, padding=1)})
+                #setattr(self, self.conv_keys[current_key], nn.Conv2d(channels, num_kernels[num_kernel_counter], 3, stride=2, padding=1))
                 channels = num_kernels[num_kernel_counter]
                 current_key += 1
             else:
-                setattr(self, self.conv_keys[current_key], nn.Conv2d(channels, num_kernels[num_kernel_counter], 3, padding=1))
+                self.layers_dict.update({self.conv_keys[current_key]:nn.Conv2d(channels, num_kernels[num_kernel_counter], 3, padding=1)})
+                #setattr(self, self.conv_keys[current_key], nn.Conv2d(channels, num_kernels[num_kernel_counter], 3, padding=1))
                 channels = num_kernels[num_kernel_counter]
                 current_key += 1
                 
     def _init_fc_layers(self, sizes_fc, num_pix):
         #keys = ['FC'+str(i) for i in range(num_fc)]
-        sizes = [num_pix]+sizes_fc
+        if num_pix != None:
+            sizes = [num_pix]+sizes_fc
+        else:
+            sizes = sizes_fc
         for i in range(self.num_fc):
-            setattr(self, self.fc_keys[i], nn.Linear(int(sizes[i]), int(sizes[i+1])))
+            self.layers_dict.update({self.fc_keys[i]:MSALinearLayer(int(sizes[i]), int(sizes[i+1]))})
+            #setattr(self, self.fc_keys[i], nn.Linear(int(sizes[i]), int(sizes[i+1])))
             #print(sizes[i], sizes[i+1])
             
         
@@ -71,23 +86,37 @@ class ResConvNet(BasicVarConvNet):
         '''subsampling of identity via 1x1 convolution'''
         #channels = [1] + num_kernels
         for layer in range(len(self.subs_points)):
-            setattr(self, self.subs_keys[layer], nn.Conv2d(num_kernels[layer], num_kernels[layer+1], 1, stride=2))
+            self.layers_dict.update({self.subs_keys[layer]:nn.Conv2d(num_kernels[layer], num_kernels[layer+1], 1, stride=2)})
+            #setattr(self, self.subs_keys[layer], nn.Conv2d(num_kernels[layer], num_kernels[layer+1], 1, stride=2))
         
     def forward(self, x):
         '''single res_skip, x_new = x+Relu(W*x)'''
         for layer in range(self.num_conv):
             if layer in self.subs_points:
-                x = self.subsample(x, self.subs_points.index(layer)) + F.relu(getattr(self, self.conv_keys[layer])(x))
+                #intermediate_x = getattr(self, self.conv_keys[layer])(x)
+                #intermediate_x = self.layers_dict[self.conv_keys[layer]](x)
+                x_key = 'x_batch'+str(self.batch_element)+self.conv_keys[layer]
+                self.x_dict.update({x_key:torch.tensor(x, requires_grad=True)})
+                x = self.subsample(x, self.subs_points.index(layer)) + F.relu(self.layers_dict[self.conv_keys[layer]](x))
             else:
-                x = x + F.relu(getattr(self, self.conv_keys[layer])(x))
+                #intermediate_x = self.layers_dict[self.conv_keys[layer]](x)
+                x_key = 'x_batch'+str(self.batch_element)+self.conv_keys[layer]
+                self.x_dict.update({x_key:torch.tensor(x, requires_grad=True)})
+                x = x + F.relu(self.layers_dict[self.conv_keys[layer]](x))
         x = x.view(-1, self.num_flat_features(x))
         for layer in range(self.num_fc-1):
-            x = F.relu(getattr(self, self.fc_keys[layer])(x))
-        x = F.softmax(getattr(self, self.fc_keys[self.num_fc-1])(x), dim=1)      
+            x_key = 'x_batch'+str(self.batch_element)+self.fc_keys[layer]
+            self.x_dict.update({x_key:torch.tensor(x, requires_grad=True)})
+            x = F.relu(self.layers_dict[self.fc_keys[layer]](x))
+        x_key = 'x_batch'+str(self.batch_element)+self.fc_keys[self.num_fc-1]
+        self.x_dict.update({x_key:torch.tensor(x, requires_grad=True)})
+        x = F.softmax(self.layers_dict[self.fc_keys[self.num_fc-1]](x), dim=1)
+        x_key = 'x_batch'+str(self.batch_element)+self.fc_keys[self.num_fc]
+        self.x_dict.update({x_key:torch.tensor(x, requires_grad=True)})
         return x
     
     def subsample(self, x, index):
-        x = getattr(self, self.subs_keys[index])(x)
+        x = self.layers_dict[self.subs_keys[index]](x)
         return x
     
     def num_flat_features(self, x):
@@ -144,14 +173,22 @@ class ConvNet(BasicVarConvNet):
     def forward(self, x):
         '''x_new = Relu(W*x)'''
         for layer in range(self.num_conv):
-            x = F.relu(getattr(self, self.conv_keys[layer])(x))
+            x_key = 'x_batch'+str(self.batch_element)+self.conv_keys[layer]
+            self.x_dict.update({x_key:torch.tensor(x, requires_grad=True)})
+            x = F.relu(self.layers_dict[self.conv_keys[layer]](x))
 
-        x = x.view(-1, self.num_flat_features(x))
+        #x = x.view(-1, self.num_flat_features(x))
 
         for layer in range(self.num_fc-1):
-            x = F.relu(getattr(self, self.fc_keys[layer])(x))
-
-        x = F.softmax(getattr(self, self.fc_keys[self.num_fc-1])(x), dim=1)      
+            #print(x)
+            x_key = 'x_batch'+str(self.batch_element)+self.fc_keys[layer]
+            self.x_dict.update({x_key:torch.tensor(x, requires_grad=True)})
+            x = F.relu(self.layers_dict[self.fc_keys[layer]](x))
+        x_key = 'x_batch'+str(self.batch_element)+self.fc_keys[self.num_fc-1]
+        self.x_dict.update({x_key:torch.tensor(x, requires_grad=True)})
+        x = F.softmax(self.layers_dict[self.fc_keys[self.num_fc-1]](x), dim=0)   
+        x_key = 'x_batch'+str(self.batch_element)+self.fc_keys[self.num_fc]
+        self.x_dict.update({x_key:torch.tensor(x, requires_grad=True)})
         return x
     
     def num_flat_features(self, x):
@@ -182,7 +219,53 @@ class ConvNet(BasicVarConvNet):
         
         toc=timeit.default_timer()
         print('Time elapsed: ',toc-tic)
-        
+
+    def train_msa(self, num_epochs, dataloader):
+        criterion = nn.MSELoss()
+        for epoch in range(num_epochs):
+            for index, (data, label) in enumerate(dataloader):
+                if index % 10 == 0:
+                    print(index*dataloader.batch_size)
+                for batch_element in range(dataloader.batch_size):
+                    self.batch_element = batch_element
+                    # MSA step 1
+                    self.msa_step_1(data[batch_element])
+                    # MSA step 2
+                    self.msa_step_2(criterion,label)
+                # MSA step 3
+                self.msa_step_3(dataloader.batch_size)
+                for x in self.x_dict:
+                    self.x_dict[x].grad.zero_()
+                    
+
+
+    def msa_step_1(self,x):
+        self.forward(x)
+
+    def msa_step_2(self,criterion,label):
+        x_T_key = 'x_batch'+str(self.batch_element)+self.fc_keys[self.num_fc]
+        loss = criterion(self.x_dict[x_T_key],label[self.batch_element])
+        if self.batch_element == 50:
+            print(loss)
+        loss.backward()
+        lambda_T_key = 'lambda_batch'+str(self.batch_element)+self.fc_keys[self.num_fc]
+        self.lambda_dict.update({lambda_T_key:self.x_dict[x_T_key].grad})
+        for layer in reversed(range(self.num_fc)):
+            x_key = 'x_batch'+str(self.batch_element)+self.fc_keys[layer]
+            lambda_key = 'lambda_batch'+str(self.batch_element)+self.fc_keys[layer+1]
+            
+            res = self.layers_dict[self.fc_keys[layer]].hamilton(self.x_dict.get(x_key), self.lambda_dict.get(lambda_key))
+            res.backward()
+            new_lambda_key = 'lambda_batch'+str(self.batch_element)+self.fc_keys[layer]
+            self.lambda_dict.update({new_lambda_key:self.x_dict.get(x_key).grad})
+        # add step for conv layers
+
+    def msa_step_3(self, batchsize):
+        for layer in range(self.num_fc):
+            self.layers_dict[self.fc_keys[layer]].set_weights(layer, self.x_dict, self.lambda_dict, batchsize)
+        # add step for conv layers
+
+
     def test(self, dataloader, test_set_size):
         with torch.no_grad():
             correct_pred = 0
