@@ -644,20 +644,20 @@ With the choices $\bar{x} = \tilde{x}$, $\bar{W}_k = \tilde{W}_{k+1}$ and $f_k(x
 
 \section{Convolutional Neural Networks}
 \label{sec:CNN}
-In the last section of this chapter we will look at \acp{CNN}. \acp{CNN} are specialized for image classification and consist of different types of layers. The input images can be seen as a $n_{px} \times n_{py} \times n_c$ hypermatrices with $n_{px} \times n_{py}$ pixels and $n_c$ channels. The channels contain for example different color information of the image. This section is mainly based on \cite{cs231n}.
+In the last section of this chapter we will look at \acp{CNN}. \acp{CNN} are specialized for image classification and consist of different types of layers. The input images can be seen as a $n_{px} \times n_{py} \times n_c$ tensors with $n_{px} \times n_{py}$ pixels and $n_c$ channels. The channels contain for example different color information of the image. This section is mainly based on \cite{cs231n}.
 
 The architectures of \acp{RNN} and \acp{CNN} can be combined.
 
 \subsection{Convolutional Layer}
 \label{subsec:CL}
-The convolutional layers are the main functionality of \acp{CNN}. For each layer there are hyperparameters such as the \emph{stride} $s \in \mathbb{N}$, a \emph{zero-padding} $p \in \mathbb{N}_0$, the number $d\in \mathbb{N}$ of  filters and their spatial size $n_f$. A filter $F$ can be interpreted as a hypermatrix with dimensions $n_f \times n_f \times n_c, n_f \in 2\mathbb{N}+1, n_c \in \mathbb{N}$. 
+The convolutional layers are the main functionality of \acp{CNN}. For each layer there are hyperparameters such as the \emph{stride} $s \in \mathbb{N}$, a \emph{zero-padding} $p \in \mathbb{N}_0$, the number $d\in \mathbb{N}$ of  filters and their spatial size $n_f$. A filter $F$ can be interpreted as a tensor with dimensions $n_f \times n_f \times n_c, n_f \in 2\mathbb{N}+1, n_c \in \mathbb{N}$. 
 
 The stride specifies the number of pixels a filter is shifted while it slides over the image. The number of zeros that are padded around the input image is given by the zero-padding, while the number of filters determines the number of channels in the output.
 
 The weights $F_{j,k,l} \in \mathbb{R} $ for $j,k \in [n_f], l \in [n_c]$ of a filter $F$ are learnable parameters.\newline
 
 \begin{definition}[Convolution]
-Let $I,F \in \mathbb{R}^{n\times m \times c}$  be hypermatrices. Then the \emph{convolution} $*:\mathbb{R}^{n\times m \times c}\times \mathbb{R}^{n\times m \times c} \to \mathbb{R}$ of $I$ and $F$ is defined as follows:
+Let $I,F \in \mathbb{R}^{n\times m \times c}$ be tensors. Then the \emph{convolution} $*:\mathbb{R}^{n\times m \times c}\times \mathbb{R}^{n\times m \times c} \to \mathbb{R}$ of $I$ and $F$ is defined as follows:
 \begin{equation*}
 I*F := \sum\limits_{j=1}^{n} \sum\limits_{k=1}^{m} \sum\limits_{l=1}^{c} I_{j,k,l}F_{j,k,l}
 %\label{eq:3}
@@ -672,7 +672,7 @@ Let $I \in \mathbb{R}^{n_{px} \times n_{py} \times n_c}$ be an image, $F_1,\dots
 %I_{[(i-1)s+1:(i-1)s+n_f], [(j-1)s+1:(j-1)s+n_f], [1:n_c]} * F_k
 %\label{eq:5}
 \end{equation*}
-where $I_{J,K,L}$ is a $n_f \times n_f \times n_c$ sub-hypermatrix of $I$ and $J:=\{(j-1)s+1,\dots,(j-1)s+n_f\}, K:=\{(k-1)s+1,\dots,(k-1)s+n_f\}, L:=\{1, \dots, n_c\}$.
+where $I_{J,K,L}$ is a $n_f \times n_f \times n_c$ sub-tensor of $I$ and $J:=\{(j-1)s+1,\dots,(j-1)s+n_f\}, K:=\{(k-1)s+1,\dots,(k-1)s+n_f\}, L:=\{1, \dots, n_c\}$.
 %$I_{[a+1:a+n_f],[b+1:b+n_f],[1:n_c]}$
 \end{definition}
 
@@ -686,12 +686,12 @@ Pooling layers are inserted between convolutional layers for subsampling of the 
 As hyperparameters there are the spatial size $n_f$ of a pooling filter and the stride $s$.
 
 \begin{definition}[Pooling]
-Let $I \in \mathbb{R}^{n\times m \times c}$  be a hypermatrix and $\phi : \mathbb{R}^{n_f \times n_f} \to \mathbb{R}$ a pooling-function. Then the \emph{pooling} $I^p$ of $I$ is defined via
+Let $I \in \mathbb{R}^{n\times m \times c}$  be a tensor and $\phi : \mathbb{R}^{n_f \times n_f} \to \mathbb{R}$ a pooling-function. Then the \emph{pooling} $I^p$ of $I$ is defined via
 \begin{equation*}
 I^p_{j,k,l}:=\phi(I_{J,K,l}), \hspace{0.5cm} \forall (j,k,l) \in \left(\frac{n-n_f}{s}+1\right) \times \left(\frac{m-n_f}{s}+1\right) \times c
 %\label{eq:}[(i-1)s+1:(i-1)s+n_f],[(j-1)s+1:(j-1)s+n_f]
 \end{equation*}
-where $I_{J,K,l}$ is a $n_f \times n_f \times 1$ sub-hypermatrix of $I$ and $J:=\{(j-1)s+1,\dots,(j-1)s+n_f\}, K:=\{(k-1)s+1,\dots,(k-1)s+n_f\}$.
+where $I_{J,K,l}$ is a $n_f \times n_f \times 1$ sub-tensor of $I$ and $J:=\{(j-1)s+1,\dots,(j-1)s+n_f\}, K:=\{(k-1)s+1,\dots,(k-1)s+n_f\}$.
 \end{definition}
 
 %Given an image of size $n_{px} \times n_{py} \times n_c$ the pooling produces an output of size $\left(\frac{n_{px}-n_f}{s}+1\right) \times \left(\frac{n_{py}-n_f}{s}+1\right) \times n_c$. \newline

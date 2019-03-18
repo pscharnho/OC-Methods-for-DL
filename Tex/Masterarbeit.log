@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.19 (MiKTeX 2.9.6840 64-bit) (preloaded format=pdflatex 2018.12.2)  21 FEB 2019 11:43
+This is pdfTeX, Version 3.14159265-2.6-1.40.19 (MiKTeX 2.9.6840 64-bit) (preloaded format=pdflatex 2018.12.2)  4 MAR 2019 09:10
 entering extended mode
 **./Masterarbeit.tex
 (Masterarbeit.tex
@@ -1421,7 +1421,7 @@ Underfull \hbox (badness 10000) in paragraph at lines 918--921
 [20] (Masterarbeit.aux) ) 
 Here is how much of TeX's memory you used:
  30938 strings out of 492970
- 601457 string characters out of 3126594
+ 601700 string characters out of 3126594
  938239 words of memory out of 3000000
  34293 multiletter control sequences out of 15000+200000
  546307 words of font info for 81 fonts, out of 3000000 for 9000
@@ -1449,7 +1449,7 @@ Data/Local/Programs/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmti12.pfb><C:/Us
 ers/pscha/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmtt
 12.pfb><C:/Users/pscha/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/public/ams
 fonts/symbols/msbm10.pfb>
-Output written on Masterarbeit.pdf (26 pages, 276796 bytes).
+Output written on Masterarbeit.pdf (26 pages, 276768 bytes).
 PDF statistics:
  161 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
