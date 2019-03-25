@@ -19,10 +19,13 @@
 \usepackage{latexsym}                                             % spezielle Mathematik-Symbole
 \usepackage{graphicx}                                             % zum Einbinden von Bildern
 \usepackage{amsmath, amssymb, amsthm}                             % LaTeX-Erweiterungen der AMS
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\sign}{sign}
 \usepackage{harvard}                                              % fuer Beispiel-Literaturverzeichnis
 \usepackage{tikz}
 \usetikzlibrary{patterns,decorations.pathreplacing}
 \usetikzlibrary{backgrounds}
+\usepackage[]{algorithm2e}
 
 % ----Einbinden von pdf-Dateien oder einzelnen Seiten daraus
 \usepackage{pdfpages}
@@ -72,6 +75,7 @@
 \newtheorem{myTheorem}[definition]{Theorem}
 \newtheorem{corollar}[definition]{Corollar}
 
+
 \lstset{
 	% extendedchars=true,      	% funktioniert nicht mit utf-8 �frown�-Emoticon
 	basicstyle=\tiny,        % the size of the fonts that are used for the code
@@ -101,6 +105,7 @@
 \begin{acronym}
 	\acro{CNN}{Convolutional Neural Network}
 	\acro{IVP}{Initial Value Problem}
+	\acro{MSA}{Method of Successive Approximations}
 	\acro{NN}{Neural Network}
 	\acro{OCP}{Optimal Control Problem}
 	\acro{ODE}{Ordinary Differential Equation}
@@ -222,7 +227,7 @@ x_{k+1} = x_k + h_k f(t_k,x_k), \hspace{0.5cm} k=0,\dots, m-1
 with $h_k := t_{k+1}-t_k, k=0,\dots,m-1$, $x(t_k) \approx x_k, k=1,\dots,m$ and $x_0 = \bar x_0$. 
 \end{definition}
 
-The case of equidistant time points $t_k$ a parameter $h$ exists with $h_k = h \forall k \in \{0,\dots,m-1\}$. 
+In the case of equidistant time points $t_k$, a parameter $h$ exists with $h_k = h \forall k \in \{0,\dots,m-1\}$. 
 
 Given a stable \ac{ODE} the discretization and the method need also to fulfill certain conditions to ensure stability of the solution. Here only the stability of the forward Euler method with equidistant time points is considered.
 
@@ -241,7 +246,7 @@ For a given \ac{ODE}, when using the forward Euler method, the discretization ha
 \label{sec:oc}
 This section is mainly based on \cite{ocatcov} and \cite{os}. In optimal control the aim is to minimize (or maximize) a given cost-function, depending on the state variables $x(t)$, with the choice of the control function $u(t)$.
 % The $u(t)$ is chosen such that certain constraints are fulfilled. 
-The state variables $x(t): [t_0,T] \to \mathbb{R}^{n_x}$ can be determined via the solution of a \ac{ODE}
+The state variables $x(t): [t_0,T] \to \mathbb{R}^{n_x}$ can be determined via the solution of an \ac{ODE}
 \begin{equation}
 \dot x(t) = f(x(t),u(t)), \hspace{0.5cm} \forall t \in [t_0, T]
 \label{eq:odeocp}
@@ -316,6 +321,7 @@ For the time discrete \ac{PMP} let $t_0 < t_1 < \dots < t_m = T$ be a discretiza
 
 
 \begin{myTheorem}[Pontryagin Maximum Principle in discrete time]
+\label{thm:pmpdt}
 Let $x^*=\{x_0^*, \dots,x_m^*\}$, $x^*_k \in \mathbb R^{n_x}$, $k = 0,\dots, m$, $u^* = \{u_0^*, \dots,u_{m-1}^*\}$, $u_k^*\in \Omega$, $k = 0, \dots, m-1$ and $(x^*,u^*)$ be an optimal solution to problem (\ref{opt:ocpdt}). Then a co-state process $\lambda^* = \{\lambda_0^*, \dots, \lambda_m^*\}$, $\lambda^*_k \in \mathbb R^{n_x}$, $k=0,\dots,m$ exists, such that
 \begin{align}
 1.&\hspace{0.2cm} x^*_{k+1} =  \nabla_{\lambda_{k+1}} H(x^*_k,u^*_k,\lambda^*_{k+1}) &k=0,\dots,m-1 \\
@@ -778,7 +784,7 @@ For the classification to be correct, we require matching signs of the entries o
 	\item Hinge loss 2: $\phi(x^i_T,y^i) = max\{0,\underset{j \in [n_y]}{max}\{1-y^i_j x^i_{T,j}\}\}$
 \end{itemize}
 
-Both hinge loss versions are extensions from the binary classification case, where $\mathcal{Y} = \{-1,1\}$ and th hinge loss is defined as $\phi(x^i_T,y^i) = max\{0,1-y^i x^i_{T}\}$.
+Both hinge loss versions are extensions from the binary classification case, where $\mathcal{Y} = \{-1,1\}$ and the hinge loss is defined as $\phi(x^i_T,y^i) = max\{0,1-y^i x^i_{T}\}$.
 
 
 \subsection{Regression Task}
@@ -841,7 +847,7 @@ A loss function $\phi(\cdot)$, introduced in \ref{sec:losfunc}, is minimized ove
 
 The forward propagation yields \acp{ODE} as presented in the last section, with initial values from the samples.
 
-Addtitional constraints on the weights can be introduced. Examples are binary and ternary networks as in \cite{aocatdl}. For weight-matrices $W_k$ the  weights $W_{k;i,j}$ are constrained being in $\Omega = \{-1,1\}$ or $\{-1,0,1\}$, for $k=0,\dots,T-1$ and $i\in [n_{x_{k+1}}], j\in [n_{x_k}]$. Analogously we have these constaints on $W_{i,j}(t)$, elementwise for the matrix-functions $W(t)$, for the continuous case. \newline
+Addtitional constraints on the weights can be introduced. Examples are binary and ternary networks as in \cite{aocatdl}. The weight-matrices $W_k$ are constrained being in $\Omega = \{-1,1\}^{n_{k+1}\times n_{k}}$ or $\{-1,0,1\}^{n_{k+1}\times n_{k}}$, for $k=0,\dots,T-1$ and $n_0 = n_x, n_T = n_y$. Analogously we have these constaints on the matrix-functions $W(t)$ for all $t\in[t_0,T]$, for the continuous case. \newline
 
 With these considerations a continuous-time and a discrete-time \ac{OCP} can be formulated:
 
@@ -851,7 +857,7 @@ Let $(\bar{x}^i,y^i) \in \mathbb R^{n_x} \times \mathcal{Y}, i=1,\dots,s$ be giv
 {x,W}{\frac{1}{s}\sum_{i=1}^{s}{\phi^i(x^i(T))} + \frac{1}{s}\sum_{i=1}^s{\int_{t_0}^T L(x^i(t),W(t)) \mathrm{d}t}} {\label{opt:nnlocp}} {}
 \addConstraint{\dot x^i(t)}{= f(x^i(t),W(t))}{\hspace{0.5cm}\forall t \in [t_0, T], i=1,\dots,s}
 \addConstraint{x^i(t_0)}{= \bar x^i}{\hspace{0.5cm}i=1,\dots,s}
-\addConstraint{W_{i,j}(t)}{\in \Omega}{\hspace{0.5cm}\forall t \in [t_0, T], i \in [n_x], j \in [n_x]}
+\addConstraint{W(t)}{\in \Omega}{\hspace{0.5cm}\forall t \in [t_0, T]}
 \end{mini}
 where $\phi^i(x) := \phi(x,y^i)$ is a loss-function with the $y^i$ integrated into the definition.
 \end{definition}
@@ -859,15 +865,15 @@ where $\phi^i(x) := \phi(x,y^i)$ is a loss-function with the $y^i$ integrated in
 \begin{definition}[Discrete-Time \ac{OCP} for \ac{NN} Learning]
 Let $(\bar{x}^i,y^i) \in \mathbb R^{n_x} \times \mathcal{Y}, i=1,\dots,s$ be given samples with sample size $s$. The discrete-time \ac{OCP} for \ac{NN} learning states as follows:
 \begin{mini}
-{x,W}{\frac{1}{s}\sum_{i=1}^{s}{\phi^i(x^i_T)} + \sum_{i=1}^s \sum_{k=0}^{T-1} L(x^i_k,W_k) } {\label{opt:nnldtocp}} {}
-\addConstraint{x^i_{k+1}}{= f(x^i_k,W_k)}{\hspace{0.5cm} k= 1,\dots,t-1, i=1,\dots,s}
+{x,W}{\frac{1}{s}\sum_{i=1}^{s}{\phi^i(x^i_T)} + \sum_{i=1}^s \sum_{k=0}^{T-1} L_k(x^i_k,W_k) } {\label{opt:nnldtocp}} {}
+\addConstraint{x^i_{k+1}}{= f_k(x^i_k,W_k)}{\hspace{0.5cm} k= 0,\dots,T-1, i=1,\dots,s}
 \addConstraint{x^i_0}{= \bar x^i}{\hspace{0.5cm}i=1,\dots,s}
-\addConstraint{W_{k;i,j}}{\in \Omega}{\hspace{0.5cm}k=0,\dots, T-1, i \in [n_{x_{k+1}}], j \in [n_{x_k}]}
+\addConstraint{W_{k}}{\in \Omega}{\hspace{0.5cm}k=0,\dots, T-1}
 \end{mini}
 where $\phi^i(x) := \phi(x,y^i)$ is a loss-function with the $y^i$ integrated into the definition.
 \end{definition}
 
-For \acp{RNN} of degree 2, the forward propagation can be written as a forward Euler discretization of the \ac{ODE} again, as in (\ref{eq:ResNetFwEul}).
+For \acp{RNN} of degree 2, the forward propagation can be written as a forward Euler discretization of the \ac{ODE}, as in (\ref{eq:ResNetFwEul}).
 
 % -----------------------------------------------------------------------------------------
 % Analyse der Problemstruktur
@@ -884,6 +890,139 @@ This section is based on \cite{safdnn}.
 \section{Maximum Principle for Neural Networks}
 In this section we make use of the work in \cite{aocatdl} and \cite{mpbafdl}.
 
+For the problem (\ref{opt:nnldtocp}), a discrete time formulation of the \ac{PMP} as in theorem \ref{thm:pmpdt} can be made. For this purpose the layer-wise Hamilton-function $H_k: \mathbb{R}^{n_{k}} \times \Omega \times\mathbb{R}^{n_{k+1}} \to \mathbb{R} $ is defined as follows
+\begin{equation}
+H_k(x,W,\lambda) = \lambda^T f_k(x,W) - \frac{1}{s} L_k(x,W)
+\label{eq:hamlw}
+\end{equation}
+
+With this Hamilton-function the \ac{PMP} as a necessary condition for optimality of the weights $W$ can be formulated.
+
+\begin{myTheorem}[\ac{PMP} for \acp{NN}]
+\label{thm:pmpnn}
+Let $x^{i^*}=\{x_0^{i^*}, \dots,x_T^{i^*}\}$, $x_k^{i^*} \in \mathbb R^{n_k}$, $k = 0,\dots, T$, $i=1,\dots,s$, $W^* = \{W_0^*, \dots,W_{T-1}^*\}$, $W_k^*\in \Omega$, $k = 0, \dots, T-1$ and $(x^*,W^*)$ be an optimal solution to problem (\ref{opt:nnldtocp}). Then co-state processes $\lambda^{i^*} = \{\lambda_0^{i^*}, \dots, \lambda_T^{i^*}\}$, $\lambda_k^{i^*} \in \mathbb R^{n_k}$, $k=0,\dots,T$, $i=1,\dots,s$ exist, such that
+\begin{align*}
+1.&\hspace{0.2cm} x_{k+1}^{i^*} =  f_k(x_k^{i^*},W_k) &k=0,\dots,T-1, i=1,\dots,s \\
+2.&\hspace{0.2cm} x_0^{i^*} = \bar x_0^i \\
+3.&\hspace{0.2cm} \lambda_k^{i^*} = \nabla_{x_k^i} H_k(x_k^{i^*},W^*_k,\lambda_{k+1}^{i^*}) & k=T-1, \dots, 0, i=1,\dots,s \\
+4.&\hspace{0.2cm} \lambda_T^{i^*} = - \frac{1}{s} \nabla_{x^i_T} \phi(x_T^{i^*}) \\
+5.&\hspace{0.2cm} \sum_{i=1}^s{H_k(x_k^{i^*},W^*_k,\lambda_{k+1}^{i^*})} \geq \sum_{i=1}^s{H_k(x_k^{i^*},W,\lambda_{k+1}^{i^*})} & \forall W \in \Omega, k = 0,\dots, T-1
+\end{align*}
+\end{myTheorem}
+
+With this theorem we can formulate an iterative algorithm to solve the learning problem, the \acf{MSA}.
+
+\subsection{The \acl{MSA}}
+
+For the \ac{MSA} an initial guess for the weights $W = \{W_0, \dots,W_{T-1}\}$ of a \ac{NN} is required. With these weights and the training samples $x^i, i \in [s]$, the intermediate values $x_k^i, i \in [s], k = 0,\dots,T$ are the result of the forward propagation. The $\lambda_T^i$ are computed using the gradient of the loss function $\phi(\cdot)$, as in theorem \ref{thm:pmpnn} no. 4. $\lambda_k^i$ is the result of the backward propagation of $\lambda_{k+1}^i$ through the hamiltion-function for $i\in [s], k=0,\dots,T-1$.
+The final step requires the maximization of the hamilton-function with the previous computed $x_k^i$ and $\lambda_k^i$, to get a new guess for the weights $W$. This is repeated for a fixed number of iterations. \newline
+
+\begin{algorithm}[H]
+ \KwData{Samples $(x_i,y_i), i=1,\dots,s$, initial weights $W^0=\{W_0^0,\dots,W_{T-1}^0\}$, number of iterations $l$}
+ \KwResult{Trained weights $W^l=\{W^l_0,\dots,W^l_{T-1}\}$}
+ \For{$j=0$ \KwTo $l$}{
+	1. $x_0^i = x_i$, \hspace{0.5cm}$i=1,\dots,s$\;
+  2. $x_{k+1}^i = f_k(x_k^i,W_k^j)$, \hspace{0.5cm}$k=0,\dots,T-1, i=1,\dots,s$\;
+  3. $\lambda_T^i = -\frac{1}{s}\nabla_{x_T^i}\phi(x_T^i)$, \hspace{0.5cm}$i=1,\dots,s$\;
+	5. $\lambda_k^i = \nabla_{x_k^i}H_k(x_k^{i},W^j_k,\lambda_{k+1}^{i})$, \hspace{0.5cm}$k=T-1,\dots,0, i=1,\dots,s$\;
+	6. $W_k^{j+1} = \underset{W\in \Omega}{\argmax} \sum_{i=1}^s{H_k(x_k^{i},W,\lambda_{k+1}^{i})}$, \hspace{0.5cm}$k=0,\dots,T-1$\;
+ }
+ \caption{The \ac{MSA}}
+\label{alg:msa}
+\end{algorithm}
+
+This formulation of algotithm \ref{alg:msa}, as in \cite{aocatdl} and \cite{mpbafdl}, does not incorporate biases in the trainable layers. A step to find new biases is derived in section \ref{subsec:bnn}.
+
+In \cite{aocatdl} an error estimate is stated for the \ac{MSA}. This error estimate will be used for regularization of the \ac{MSA} and further details can be found in the publication.
+
+Under certain conditions the following theorem holds.
+
+\begin{myTheorem}[Error Estimate for the \ac{MSA}]
+Let $J(\cdot)$ be the cost-function of problem \ref{opt:nnldtocp}. A constant $C>0$ exists, such that for any weights $W, \tilde{W}$ we have
+\begin{align*}
+J(x,\tilde{W}) - J(x,W) \leq &- \sum_{k=0}^{T-1}\sum_{i=1}^s H_k(x_k^i,\tilde{W}_k,\lambda_{k+1}^i)-H_k(x_k^i,W_k,\lambda_{k+1}^i) \\
+& + \frac{C}{s} \sum_{k=0}^{T-1}\sum_{i=1}^s \Vert f_k(x_k^i,\tilde{W}_k) - f_k(x_k^i,W_k) \Vert^2 \\
+& + \frac{C}{s} \sum_{k=0}^{T-1}\sum_{i=1}^s \Vert \nabla_x f_k(x_k^i,\tilde{W}_k) - \nabla_x f_k(x_k^i,W_k) \Vert^2_2 \\
+& + \frac{C}{s} \sum_{k=0}^{T-1}\sum_{i=1}^s \Vert \nabla_x L_k(x_k^i,\tilde{W}_k) - \nabla_x L_k(x_k^i,W_k) \Vert^2 \\
+\end{align*}
+with $x_k^i, \lambda_k^i, k=0,\dots,T, i=1,\dots,s$ being computed in one \ac{MSA} step, using $W$ as weights.
+\end{myTheorem}
+
+\subsection{Binary \aclp{NN}}
+\label{subsec:bnn}
+
+For binary \acp{NN} we restrict the weights $W=\{W_0,\dots,W_{T-1}\}$ so that $W_k \in \Omega = \{-1,1\}^{n_{k+1}\times n_{k}}$. These \acp{NN} require less memory on the computer and the discrete weights make the maximization step in the \ac{MSA} easier.\newline
+
+For a feedforward fully-connected \ac{NN} we first consider the weight multiplication and the activation to be separate layers. This results in non-trainable layers of the form $x_{k+1} = f_k(x_k,W_k) = \sigma_k(x_k)$ and trainable layers of the form $x_{k+1} = f_k(x_k,W_k) = W_k x_k$ or $x_{k+1} = f_k(x_k,W_k) = W_k x_k + b_k$ if we incorporate biases.
+
+With no additional regularization $L_k$ in the cost-function, the hamilton-function for the trainable layers writes as follows
+\begin{equation}
+H_k(x,W,\lambda) = \lambda^T W x 
+\end{equation}
+or
+\begin{equation}
+H_k(x,W,\lambda) = \lambda^T (W x+b) 
+\end{equation}
+
+The hamiltonian maximization for the second case will be stated explicitly in the following and also applies to the first case when setting the biases to zero.
+
+Consider step no. 6 in algorithm \ref{alg:msa}. For a weight and bias optimization it holds that
+\begin{equation*}
+W_k^{j+1}, b_k^{j+1} = \underset{W\in \Omega, b \in \tilde\Omega}{\argmax} \sum_{i=1}^s{H_k(x_k^{i},W,\lambda_{k+1}^{i})} = \underset{W\in \Omega, b \in \tilde\Omega}{\argmax} \sum_{i=1}^s{{\lambda_{k+1}^{i}}^T (W x_k^{i} + b)}
+%\label{eq:}
+\end{equation*}
+with $\tilde{\Omega} = \{-1,1\}^{n_{k+1}}$.
+
+Further consider only one layer $k$. Therefore the subscripts in the next lines denote matrix or vector entries and not layers.
+%\underset{W\in \Omega, b \in \tilde\Omega}{\argmax} \sum_{i=1}^s{{\lambda^{i}}^T (W x^{i} + b)} = 
+\begin{equation*}
+\underset{W\in \Omega, b \in \tilde\Omega}{\argmax} \sum_{i=1}^s \begin{pmatrix}
+	\lambda^i_1 & \cdots & \lambda^i_{n_{k+1}}
+\end{pmatrix} \left( \begin{pmatrix}
+	w_{1,1} 					& \cdots & w_{1,n_{k}} \\
+	\vdots  					& \ddots & \vdots \\
+	w_{n_{k+1},1} & \cdots & w_{n_{k+1},n_{k}}
+\end{pmatrix} \begin{pmatrix}
+	x^i_1 \\
+	\vdots \\
+	x^i_{n_{k}}
+\end{pmatrix} + \begin{pmatrix}
+	b_1 \\
+	\vdots \\
+	b_{n_{k+1}}
+\end{pmatrix}
+\right)
+%\label{eq:}
+\end{equation*}
+
+For a single sample $i$, the expression in the sum evaluates to the following:
+
+\begin{align*}
+\lambda^T (W x +b) =& \lambda_1 (w_{1,1} x_1 + \dots + w_{1,n_k} x_{n_k}) + \dots + \lambda_{n_{k+1}} (w_{n_{k+1},1} x_1 + \dots + w_{n_{k+1},n_k} x_{n_k}) \\
+& + \lambda_1 b_1+ \dots + \lambda_{n_{k+1}} b_{n_{k+1}} \\
+ =& \sum_{l=1}^{n_{k+1}} \sum_{m=1}^{n_{k}} {w_{l,m} \lambda_l x_m} + \sum_{l=1}^{n_{k+1}} {\lambda_l b_l}
+\end{align*}
+
+Inserting this into the hamiltonian maximization for layer $k$ yields:
+
+\begin{align}
+\underset{W\in \Omega, b \in \tilde\Omega}{\argmax} \sum_{i=1}^s{{\lambda^{i}}^T (W x^{i} + b)} =& \underset{w_{l,m}, b_l \in \{-1,1\}}{\argmax} \sum_{i=1}^s \left( \sum_{l=1}^{n_{k+1}} \sum_{m=1}^{n_{k}} {w_{l,m} \lambda^i_l x^i_m} + \sum_{l=1}^{n_{k+1}} {\lambda^i_l b_l} \right) \\
+ =& \sum_{l=1}^{n_{k+1}} \sum_{m=1}^{n_{k}} w_{l,m} \left( \sum_{i=1}^s \lambda^i_l x^i_m \right) + \sum_{l=1}^{n_{k+1}} b_l \left( \sum_{i=1}^s \lambda^i_l \right)
+\end{align}
+
+Since the weights and biases only take values in $\{-1,1\}$ we maximize the expression by choosing $w_{l,m} = \sign\left( \sum_{i=1}^s \lambda^i_l x^i_m\right)$ and $b_l = \sign \left( \sum_{i=1}^s \lambda^i_l \right), l=1,\dots,n_{k+1}, m=1,\dots,n_k$.
+
+Using this property the maximzation step 6 in algorithm \ref{alg:msa} can be replaced by:
+\begin{equation}
+W_k^{j+1} = \sign\left(\sum_{i=1}^s \lambda_{k+1}^i ({x_k^i})^T\right), k=0,\dots,T-1
+\label{eq:wsgnmax}
+\end{equation}
+
+If the \ac{NN} incorporates biases, they can be updated with the following rule:
+\begin{equation}
+b_k^{j+1} = \sign\left( \sum_{i=1}^s \lambda_{k+1}^i \right), k=0,\dots,T-1 
+\label{eq:bsgnmax}
+\end{equation}
 
 % -----------------------------------------------------------------------------------------
 % Numerische Ergebnisse

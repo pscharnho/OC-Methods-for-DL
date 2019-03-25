@@ -57,11 +57,11 @@ class MoonsDataset(torch.utils.data.Dataset):
     def __getitem__(self, idx):
         return self.features[idx], self.labels[idx]
 
-def makeMoonsDataset():
+def makeMoonsDataset(dataset_size, batch_size):
     torch.manual_seed(0)
-    dataset_size = 200
+    #dataset_size = 1000
     dataset = MoonsDataset(dataset_size)
-    batch_size = 40
+    #batch_size = 100
     test_split = .2
     shuffle_dataset = True
     random_seed= 42

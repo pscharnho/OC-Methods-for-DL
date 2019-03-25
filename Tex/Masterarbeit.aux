@@ -2,13 +2,17 @@
 \providecommand*\new@tpo@label[2]{}
 \catcode `"\active 
 \AC@reset@newl@bel
+\providecommand \oddpage@label [2]{}
 \babel@aux{american}{}
 \AC@undonewlabel{acro:ODE}
 \newlabel{acro:ODE}{{}{III}}
 \acronymused{ODE}
+\acronymused{MSA}
+\acronymused{NN}
 \@writefile{toc}{\contentsline {section}{Abbreviations}{IV}}
 \newacro{CNN}[\AC@hyperlink{CNN}{CNN}]{Convolutional Neural Network}
 \newacro{IVP}[\AC@hyperlink{IVP}{IVP}]{Initial Value Problem}
+\newacro{MSA}[\AC@hyperlink{MSA}{MSA}]{Method of Successive Approximations}
 \newacro{NN}[\AC@hyperlink{NN}{NN}]{Neural Network}
 \newacro{OCP}[\AC@hyperlink{OCP}{OCP}]{Optimal Control Problem}
 \newacro{ODE}[\AC@hyperlink{ODE}{ODE}]{Ordinary Differential Equation}
@@ -25,6 +29,7 @@
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}
 \@writefile{lol}{\addvspace {10\p@ }}
+\@writefile{loa}{\addvspace {10\p@ }}
 \newlabel{chap:Introduction}{{1}{1}}
 \citation{sodei}
 \citation{ngd}
@@ -32,6 +37,7 @@
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}
 \@writefile{lol}{\addvspace {10\p@ }}
+\@writefile{loa}{\addvspace {10\p@ }}
 \newlabel{chap:mp}{{2}{2}}
 \@writefile{toc}{\contentsline {section}{\numberline {2.1}Numerical Analysis}{2}}
 \newlabel{sec:na}{{2.1}{2}}
@@ -88,10 +94,12 @@
 \acronymused{PMP}
 \acronymused{OCP}
 \newlabel{opt:ocpdt}{{2.19}{5}}
+\newlabel{thm:pmpdt}{{2.11}{5}}
 \@writefile{toc}{\contentsline {chapter}{\numberline {3}Neural Network Architectures}{6}}
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}
 \@writefile{lol}{\addvspace {10\p@ }}
+\@writefile{loa}{\addvspace {10\p@ }}
 \newlabel{chap:NNA}{{3}{6}}
 \acronymused{NN}
 \acronymused{NN}
@@ -145,6 +153,7 @@
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}
 \@writefile{lol}{\addvspace {10\p@ }}
+\@writefile{loa}{\addvspace {10\p@ }}
 \newlabel{chap:NNLaOCP}{{4}{11}}
 \acronymused{NN}
 \acronymused{OCP}
@@ -196,25 +205,62 @@
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}
 \@writefile{lol}{\addvspace {10\p@ }}
+\@writefile{loa}{\addvspace {10\p@ }}
 \newlabel{chap:AotPS}{{5}{15}}
 \acronymused{PMP}
 \acronymused{NN}
 \@writefile{toc}{\contentsline {section}{\numberline {5.1}Stability of the Forward Propagation}{15}}
 \@writefile{toc}{\contentsline {section}{\numberline {5.2}Maximum Principle for Neural Networks}{15}}
-\@writefile{toc}{\contentsline {chapter}{\numberline {6}Numerical Results}{16}}
+\acronymused{PMP}
+\newlabel{eq:hamlw}{{5.1}{15}}
+\acronymused{PMP}
+\newlabel{thm:pmpnn}{{5.1}{15}}
+\acronymused{PMP}
+\acronymused{NN}
+\AC@undonewlabel{acro:MSA}
+\newlabel{acro:MSA}{{5.2}{15}}
+\acronymused{MSA}
+\citation{aocatdl}
+\citation{mpbafdl}
+\citation{aocatdl}
+\acronymused{MSA}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2.1}The \acl {MSA}}{16}}
+\acronymused{MSA}
+\acronymused{NN}
+\@writefile{loa}{\contentsline {algocf}{\numberline {1}{\ignorespaces The \ac {MSA}}}{16}}
+\newlabel{alg:msa}{{1}{16}}
+\acronymused{MSA}
+\acronymused{MSA}
+\acronymused{MSA}
+\acronymused{MSA}
+\acronymused{MSA}
+\acronymused{NN}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2.2}Binary \aclp {NN}}{17}}
+\newlabel{subsec:bnn}{{5.2.2}{17}}
+\acronymused{NN}
+\acronymused{NN}
+\acronymused{MSA}
+\acronymused{NN}
+\newlabel{eq:wsgnmax}{{5.6}{18}}
+\acronymused{NN}
+\newlabel{eq:bsgnmax}{{5.7}{18}}
+\@writefile{toc}{\contentsline {chapter}{\numberline {6}Numerical Results}{19}}
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}
 \@writefile{lol}{\addvspace {10\p@ }}
-\newlabel{chap:NR}{{6}{16}}
-\@writefile{toc}{\contentsline {chapter}{\numberline {7}Conclusion and Outlook}{17}}
+\@writefile{loa}{\addvspace {10\p@ }}
+\newlabel{chap:NR}{{6}{19}}
+\@writefile{toc}{\contentsline {chapter}{\numberline {7}Conclusion and Outlook}{20}}
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}
 \@writefile{lol}{\addvspace {10\p@ }}
-\newlabel{chap:CaO}{{7}{17}}
-\@writefile{toc}{\contentsline {chapter}{\numberline {A}Appendix}{18}}
+\@writefile{loa}{\addvspace {10\p@ }}
+\newlabel{chap:CaO}{{7}{20}}
+\@writefile{toc}{\contentsline {chapter}{\numberline {A}Appendix}{21}}
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}
 \@writefile{lol}{\addvspace {10\p@ }}
+\@writefile{loa}{\addvspace {10\p@ }}
 \bibdata{lit}
 \bibcite{cs231n}{AK}
 \bibcite{mlcba}{Gor17}

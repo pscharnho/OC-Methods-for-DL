@@ -20,7 +20,7 @@ class ReluLayer(nn.Module):
 
     def hamilton(self, x, lambd):
         x_neu = self.forward(x)
-        res = torch.dot(x_neu,lambd)
+        res = torch.sum(x_neu*lambd, dim=1)
         return res
 
 
@@ -35,7 +35,18 @@ class TanhLayer(nn.Module):
 
     def hamilton(self, x, lambd):
         x_neu = self.forward(x)
-        res = torch.dot(x_neu,lambd)
+        res = torch.sum(x_neu*lambd, dim=1)
+        return res
+
+
+class CustomBatchNorm1d(nn.BatchNorm1d):
+    def __init__(self, num_features, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True):
+        super().__init__(num_features, eps, momentum, affine, track_running_stats)
+        self.name = 'BatchNorm'
+
+    def hamilton(self, x, lambd):
+        x_neu = self.forward(x)
+        res = torch.sum(x_neu*lambd, dim=1)
         return res
 
 
@@ -125,17 +136,27 @@ class MSALinearLayer(nn.Module):
 
     def hamilton(self, x, lambd):
         x_neu = self.forward(x)
+        #print('X_neu')
         #print(x_neu)
-        res = torch.dot(x_neu,lambd)
+        #print('Lambda')
+        #print(lambd)
+        res = torch.sum(x_neu*lambd, dim=1)
+        #print('Hamilton')
+        #print(res)
         return res
 
     def set_weights(self, layer_index, x_dict, lambda_dict, batch_size):
-        m = torch.zeros(self.linear.out_features, self.linear.in_features, dtype=torch.float32)#
-        for i in range(batch_size):
-            lambda_key = 'lambda_batch'+str(i)+'FC'+str(layer_index+1)
-            x_key = 'x_batch'+str(i)+'FC'+str(layer_index)
-            #print(lambda_dict.get(lambda_key))
-            m += torch.matmul(lambda_dict.get(lambda_key).reshape(-1,1),x_dict.get(x_key).reshape(1,-1))
+        self.linear.weight.grad.data.zero_()
+        #m = torch.zeros(self.linear.out_features, self.linear.in_features, dtype=torch.float32)#
+        #for i in range(batch_size):
+        lambda_key = 'lambda_'+'FC'+str(layer_index+1)
+        x_key = 'x_'+'FC'+str(layer_index)
+        temp = torch.sum(self.hamilton(x_dict.get(x_key),lambda_dict.get(lambda_key)))
+        temp.backward()
+        m = self.linear.weight.grad
+        #print(m)
+        #print(lambda_dict.get(lambda_key))
+        #m += torch.matmul(lambda_dict.get(lambda_key).reshape(-1,1),x_dict.get(x_key).reshape(1,-1))
         #m = (1 / batch_size) * m
         self.m_accumulated = self.ema_alpha * self.m_accumulated + ( 1 - self.ema_alpha ) * m
         old_weight_signs = self.linear.weight
@@ -156,9 +177,9 @@ class MSALinearLayer(nn.Module):
 
         if self.has_bias:
             m2 = torch.zeros(self.linear.out_features, dtype=torch.float32)
-            for i in range(batch_size):
-                lambda_key = 'lambda_batch'+str(i)+'FC'+str(layer_index+1)
-                m2 += lambda_dict.get(lambda_key)
+            #for i in range(batch_size):
+            lambda_key = 'lambda_'+'FC'+str(layer_index+1)
+            m2 = torch.sum(lambda_dict.get(lambda_key), dim=0)
             #m2 = (1 / batch_size) * m2
             self.m2_accumulated = self.ema_alpha * self.m2_accumulated + ( 1 - self.ema_alpha ) * m2
             old_bias_signs = self.linear.bias

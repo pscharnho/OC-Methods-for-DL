@@ -8,7 +8,7 @@ import torch.nn.functional as F
 import torchvision
 import torchvision.transforms as transforms
 import timeit
-from Layers.Layers import MSALinearLayer, ReluLayer, TanhLayer
+from Layers.Layers import MSALinearLayer, ReluLayer, TanhLayer, CustomBatchNorm1d
 
 
 
@@ -74,9 +74,12 @@ class BasicVarConvNet(nn.Module):
 
 class BasicVarFCNet(nn.Module):
     '''Base class for FC network with msa training. For each hidden FC layer, there is an activation layer (Relu)'''
-    def __init__(self, num_fc, sizes_fc, bias, test=False):
+    def __init__(self, num_fc, sizes_fc, bias, batchnorm=True, test=False):
         super(BasicVarFCNet, self).__init__()
-        self.num_fc = num_fc * 2 - 1 # Additional counting for activation layers
+        if batchnorm:
+            self.num_fc = num_fc * 3 - 1 # Additional counting for batchnorm and activation layers
+        else:
+            self.num_fc = num_fc * 2 - 1 # Additional counting for activation layers
         
         self.fc_keys = ['FC'+str(i) for i in range(self.num_fc+1)] # Keys for intermediate variables
 
@@ -85,16 +88,27 @@ class BasicVarFCNet(nn.Module):
         self.lambda_dict = {}
         self.batch_element = None
         
-        self._init_fc_layers(sizes_fc, bias, test)
+        self._init_fc_layers(sizes_fc, bias, test, batchnorm)
                 
-    def _init_fc_layers(self, sizes_fc, bias, test):
+    def _init_fc_layers(self, sizes_fc, bias, test, batchnorm):
         fc_layer_index = 0
-        for i in range(self.num_fc):
-            if i % 2 == 0:
+        if batchnorm:
+            for i in range(0,self.num_fc,3):
                 self.layers_dict.update({self.fc_keys[i]:MSALinearLayer(int(sizes_fc[fc_layer_index]), int(sizes_fc[fc_layer_index+1]), bias=bias, test=test)})
                 fc_layer_index += 1
-            else:
-                self.layers_dict.update({self.fc_keys[i]:TanhLayer()})#ReluLayer
+            fc_layer_index = 1
+            for i in range(1,self.num_fc,3):
+                self.layers_dict.update({self.fc_keys[i]:CustomBatchNorm1d(int(sizes_fc[fc_layer_index]))})#ReluLayer
+                fc_layer_index += 1
+            for i in range(2, self.num_fc,3):
+                self.layers_dict.update({self.fc_keys[i]:ReluLayer()})#TanhLayer
+        else:
+            for i in range(self.num_fc):
+                if i % 2 == 0:
+                    self.layers_dict.update({self.fc_keys[i]:MSALinearLayer(int(sizes_fc[fc_layer_index]), int(sizes_fc[fc_layer_index+1]), bias=bias, test=test)})
+                    fc_layer_index += 1
+                else:
+                    self.layers_dict.update({self.fc_keys[i]:TanhLayer()})#ReluLayer
             
         
     def forward(self, x):
@@ -329,35 +343,38 @@ class ConvNet(BasicVarConvNet):
 
 
 class FCNet(BasicVarFCNet):
-    def __init__(self, num_fc, sizes_fc, bias, test=False):
-        super(FCNet, self).__init__(num_fc, sizes_fc, bias, test)
+    def __init__(self, num_fc, sizes_fc, bias, batchnorm=True, test=False):
+        super(FCNet, self).__init__(num_fc, sizes_fc, bias, batchnorm, test)
 
         
     def forward(self, x):
 
         for layer in range(self.num_fc):
-            x_key = 'x_batch'+str(self.batch_element)+self.fc_keys[layer]
-            self.x_dict.update({x_key:torch.tensor(x, requires_grad=True)})
+            x_key = 'x_'+self.fc_keys[layer]
+            self.x_dict.update({x_key:x.clone().detach().requires_grad_(True)})
             x = self.layers_dict[self.fc_keys[layer]](x) 
-        x_key = 'x_batch'+str(self.batch_element)+self.fc_keys[self.num_fc]
-        self.x_dict.update({x_key:torch.tensor(x, requires_grad=True)})
+        x_key = 'x_'+self.fc_keys[self.num_fc]
+        self.x_dict.update({x_key:x.clone().detach().requires_grad_(True)})
         return x
 
 
     def train_msa(self, num_epochs, dataloader):
         self.best_avg = 0
         tic=timeit.default_timer()
-        criterion = nn.CrossEntropyLoss()
+        criterion = nn.CrossEntropyLoss(reduction='none')
         dataset_size = len(dataloader.dataset)
-        self.avg_loss = torch.zeros(num_epochs, dtype=torch.float32)
+        #print('Datasetsize: '+str(dataset_size))
+        #self.avg_loss = torch.zeros(num_epochs, dtype=torch.float32)
         #print(dataloader.batch_size)
         self.batch_size = dataloader.batch_size
         for epoch in range(num_epochs):
-
+            for layer in self.layers_dict:
+                if self.layers_dict[layer].name == 'BatchNorm':
+                    self.layers_dict[layer].train()
             self.train_epoch(epoch, dataloader, criterion)
-            self.avg_loss[epoch] = self.avg_loss[epoch] / dataset_size
+            #self.avg_loss[epoch] = self.avg_loss[epoch] / dataset_size
             print('Epoch '+str(epoch+1)+' ##############')
-            self.test(dataloader,160)
+            self.test(dataloader,dataset_size*0.8)
             self.decay_ema_alpha(0.95)
             
         toc=timeit.default_timer()
@@ -378,12 +395,13 @@ class FCNet(BasicVarFCNet):
             #         print(self.layers_dict[layer].m_accumulated)
             #         print('Macc2')
             #         print(self.layers_dict[layer].m2_accumulated)
-            for batch_element in range(self.batch_size):
-                self.batch_element = batch_element
-                # MSA step 1
-                self.msa_step_1(data[batch_element])
-                # MSA step 2
-                self.msa_step_2(epoch,criterion,label)
+            #for batch_element in range(self.batch_size):
+            #print('Train epoch')
+            self.batch_element = index
+            # MSA step 1
+            self.msa_step_1(data)#[batch_element]
+            # MSA step 2
+            self.msa_step_2(epoch,criterion,label)
             # MSA step 3
             self.msa_step_3(self.batch_size)
             #for x in self.x_dict:
@@ -391,35 +409,40 @@ class FCNet(BasicVarFCNet):
 
 
     def msa_step_1(self,x):
+        #print('Msa 1')
         self.forward(x)
 
 
     def msa_step_2(self,epoch,criterion,label):
+        #print('Msa 2')
         self.compute_lambda_T(epoch,criterion, label)
         self.compute_lambdas()
 
 
     def compute_lambda_T(self, epoch, criterion, label):
-        x_T_key = 'x_batch'+str(self.batch_element)+self.fc_keys[self.num_fc]
-        loss = criterion(self.x_dict[x_T_key].unsqueeze(0),label[self.batch_element].unsqueeze(0))
-        self.avg_loss[epoch] += loss
-        loss.backward()
-        lambda_T_key = 'lambda_batch'+str(self.batch_element)+self.fc_keys[self.num_fc]
+        x_T_key = 'x_'+self.fc_keys[self.num_fc]
+        loss = criterion(self.x_dict[x_T_key],label)
+        #self.avg_loss[epoch] += loss
+        for i in range(len(loss)):
+            loss[i].backward(retain_graph=True)
+        lambda_T_key = 'lambda_'+self.fc_keys[self.num_fc]
         self.lambda_dict.update({lambda_T_key:-1/self.batch_size*self.x_dict[x_T_key].grad})
 
 
     def compute_lambdas(self):
         for layer in reversed(range(self.num_fc)):
-            x_key = 'x_batch'+str(self.batch_element)+self.fc_keys[layer]
-            lambda_key = 'lambda_batch'+str(self.batch_element)+self.fc_keys[layer+1]
+            x_key = 'x_'+self.fc_keys[layer]
+            lambda_key = 'lambda_'+self.fc_keys[layer+1]
             
             res = self.layers_dict[self.fc_keys[layer]].hamilton(self.x_dict.get(x_key), self.lambda_dict.get(lambda_key))
-            res.backward()
-            new_lambda_key = 'lambda_batch'+str(self.batch_element)+self.fc_keys[layer]
+            for i in range(len(res)):
+                res[i].backward(retain_graph=True)
+            new_lambda_key = 'lambda_'+self.fc_keys[layer]
             self.lambda_dict.update({new_lambda_key:self.x_dict.get(x_key).grad})
 
 
     def msa_step_3(self, batchsize):
+        #print('Msa 3')
         for layer in range(self.num_fc):
             if self.layers_dict[self.fc_keys[layer]].name == 'Linear':
                 self.layers_dict[self.fc_keys[layer]].set_weights(layer, self.x_dict, self.lambda_dict, batchsize)
@@ -430,6 +453,11 @@ class FCNet(BasicVarFCNet):
             if self.layers_dict[layer].name == 'Linear':
                 self.layers_dict[layer].ema_alpha = 1 - (1 - self.layers_dict[layer].ema_alpha) * rate
 
+    def set_ema_alpha(self,value):
+        for layer in self.layers_dict:
+            if self.layers_dict[layer].name == 'Linear':
+                self.layers_dict[layer].ema_alpha = value
+
     def set_rho(self,value):
         for layer in self.layers_dict:
             if self.layers_dict[layer].name == 'Linear':
@@ -438,16 +466,20 @@ class FCNet(BasicVarFCNet):
 
     def test(self, dataloader, test_set_size):
         with torch.no_grad():
+            for layer in self.layers_dict:
+                if self.layers_dict[layer].name == 'BatchNorm':
+                    self.layers_dict[layer].eval()
             correct_pred = 0
             for _, (data, label) in enumerate(dataloader):
-                for i in range(len(data)):
-                    prediction = self.forward(data[i])
-                    #print(prediction)
-                    _, ind = torch.max(prediction,0)
-                    #print(prediction)
-                    #print(ind)
-                    #print(label)
-                    if ind.data == label[i].data:
+                
+                prediction = self.forward(data)
+                #print(prediction)
+                _, ind = torch.max(prediction,1)
+                #print(prediction)
+                #print(ind)
+                #print(label)
+                for i in range(len(label)):
+                    if ind[i].data == label[i].data:
                         correct_pred +=1
             print('Correct predictions: '+str(correct_pred/test_set_size))
             if correct_pred/test_set_size > self.best_avg:
