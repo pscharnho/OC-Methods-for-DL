@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.19 (MiKTeX 2.9.6840 64-bit) (preloaded format=pdflatex 2018.12.2)  25 MAR 2019 17:27
+This is pdfTeX, Version 3.14159265-2.6-1.40.19 (MiKTeX 2.9.6840 64-bit) (preloaded format=pdflatex 2018.12.2)  8 APR 2019 10:08
 entering extended mode
 **./Masterarbeit.tex
 (Masterarbeit.tex
@@ -1177,18 +1177,18 @@ Package: ifmtarg 2018/04/16 v1.2b check for an empty argument
 ) (Masterarbeit.aux)
 \openout1 = `Masterarbeit.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 64.
-LaTeX Font Info:    ... okay on input line 64.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 64.
-LaTeX Font Info:    ... okay on input line 64.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 64.
-LaTeX Font Info:    ... okay on input line 64.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 64.
-LaTeX Font Info:    ... okay on input line 64.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 64.
-LaTeX Font Info:    ... okay on input line 64.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 64.
-LaTeX Font Info:    ... okay on input line 64.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 65.
+LaTeX Font Info:    ... okay on input line 65.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 65.
+LaTeX Font Info:    ... okay on input line 65.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 65.
+LaTeX Font Info:    ... okay on input line 65.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 65.
+LaTeX Font Info:    ... okay on input line 65.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 65.
+LaTeX Font Info:    ... okay on input line 65.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 65.
+LaTeX Font Info:    ... okay on input line 65.
 
 *geometry* driver: auto-detecting
 *geometry* detected driver: pdftex
@@ -1312,7 +1312,7 @@ Package scrhack Info: \landscape patched to make \textheight change optional on
 Package pdflscape Info: Auto-detected driver: pdftex on input line 81.
 )
 \c@lstlisting=\count327
-Package scrhack Info: undefining \float@addtolists on input line 64.
+Package scrhack Info: undefining \float@addtolists on input line 65.
 \c@definition=\count328
 
 ("C:\Users\pscha\AppData\Local\Programs\MiKTeX 2.9\tex\latex\listings\lstlang1.
@@ -1349,7 +1349,7 @@ although it is yet undefined on input line 20.
 
  [3
 
-] [4
+] [4] [5
 
 
 ] (Masterarbeit.lof
@@ -1361,133 +1361,153 @@ although it is yet undefined on input line 6.
 \tf@lof=\write6
 \openout6 = `Masterarbeit.lof'.
 
- [5
-
-
-] [6
+ [6
 
 
 ]
 chapter 1.
 [1
 
+
+
 ]
 chapter 2.
 Package acronym Info: Label `acro:IVP' newly defined as it shall be overridden
-although it is yet undefined on input line 172.
+although it is yet undefined on input line 173.
 [2
 
 ] [3]
 Package acronym Info: Label `acro:OCP' newly defined as it shall be overridden
-although it is yet undefined on input line 267.
-Package acronym Info: Label `acro:PMP' newly defined as it shall be overridden
-although it is yet undefined on input line 291.
+although it is yet undefined on input line 307.
  [4]
-Underfull \hbox (badness 10000) in paragraph at lines 312--313
+Package acronym Info: Label `acro:PMP' newly defined as it shall be overridden
+although it is yet undefined on input line 331.
+
+Underfull \hbox (badness 10000) in paragraph at lines 352--353
 
  []
 
 
-Overfull \hbox (11.90009pt too wide) in paragraph at lines 325--326
-[]\OT1/cmr/bx/n/12 Theorem 2.11 \OT1/cmr/m/n/12 (Pon-trya-gin Max-i-mum Prin-ci
+Overfull \hbox (11.90009pt too wide) in paragraph at lines 365--366
+[]\OT1/cmr/bx/n/12 Theorem 2.12 \OT1/cmr/m/n/12 (Pon-trya-gin Max-i-mum Prin-ci
 -ple in dis-crete time)\OT1/cmr/bx/n/12 . []\OT1/cmr/m/it/12 Let $\OML/cmm/m/it
 /12 x[] \OT1/cmr/m/n/12 = \OMS/cmsy/m/n/12 f\OML/cmm/m/it/12 x[]; [] ; x[]\OMS/
 cmsy/m/n/12 g$\OT1/cmr/m/it/12 ,
  []
 
-[5]
+[5] [6]
 chapter 3.
-LaTeX Font Info:    Try loading font information for OMS+cmr on input line 360.
+LaTeX Font Info:    Try loading font information for OMS+cmr on input line 400.
 
 ("C:\Users\pscha\AppData\Local\Programs\MiKTeX 2.9\tex\latex\base\omscmr.fd"
 File: omscmr.fd 2014/09/29 v2.5h Standard LaTeX font definitions
 )
 LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <12> not available
-(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 360.
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 400.
 
-[6
+[7
 
 ]
-Underfull \hbox (badness 10000) in paragraph at lines 522--523
+Underfull \hbox (badness 10000) in paragraph at lines 562--563
 
  []
 
-[7]
+[8]
 Package acronym Info: Label `acro:CNN' newly defined as it shall be overridden
-although it is yet undefined on input line 653.
- [8]
-Underfull \hbox (badness 10000) in paragraph at lines 663--664
+although it is yet undefined on input line 693.
+ [9]
+Underfull \hbox (badness 10000) in paragraph at lines 703--704
 
  []
 
-[9] [10]
+[10] [11]
 chapter 4.
 
-Underfull \hbox (badness 10000) in paragraph at lines 734--735
+Underfull \hbox (badness 10000) in paragraph at lines 774--775
 
  []
 
-[11
+[12
 
 ]
-Underfull \hbox (badness 10000) in paragraph at lines 811--812
+Underfull \hbox (badness 10000) in paragraph at lines 853--854
 
  []
 
-[12]
-Underfull \hbox (badness 10000) in paragraph at lines 844--845
+[13]
+Underfull \hbox (badness 10000) in paragraph at lines 886--887
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 850--851
+Underfull \hbox (badness 10000) in paragraph at lines 892--893
 
  []
 
-[13] [14]
+[14] [15]
 chapter 5.
+
+Underfull \hbox (badness 10000) in paragraph at lines 935--936
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 937--938
+
+ []
+
+[16
+
+] [17] [18]
 Package acronym Info: Label `acro:MSA' newly defined as it shall be overridden
-although it is yet undefined on input line 913.
+although it is yet undefined on input line 1059.
 
-Underfull \hbox (badness 10000) in paragraph at lines 917--919
-
- []
-
-[15
-
-]
-Underfull \hbox (badness 10000) in paragraph at lines 954--955
+Underfull \hbox (badness 10000) in paragraph at lines 1063--1065
 
  []
 
-[16] [17] [18]
+[19]
+Underfull \hbox (badness 10000) in paragraph at lines 1101--1102
+
+ []
+
+[20] [21]
+Underfull \hbox (badness 10000) in paragraph at lines 1224--1226
+
+ []
+
+[22] [23]
 chapter 6.
-[19
+[24
 
 ]
 chapter 7.
-[20
+[25
+
+]
+chapter 8.
+[26
 
 ]
 chapter A.
-[21
+[27
 
 
-] (Masterarbeit.bbl) [22
+] (Masterarbeit.bbl) [28
 
 
 ]
-Underfull \hbox (badness 10000) in paragraph at lines 1057--1060
+Underfull \hbox (badness 10000) in paragraph at lines 1273--1276
 
  []
 
-[23] (Masterarbeit.aux) ) 
+[29] (Masterarbeit.aux) ) 
 Here is how much of TeX's memory you used:
- 31874 strings out of 492970
- 616959 string characters out of 3126594
- 963950 words of memory out of 3000000
- 35218 multiletter control sequences out of 15000+200000
- 546307 words of font info for 81 fonts, out of 3000000 for 9000
+ 31893 strings out of 492970
+ 617159 string characters out of 3126594
+ 963113 words of memory out of 3000000
+ 35235 multiletter control sequences out of 15000+200000
+ 547008 words of font info for 83 fonts, out of 3000000 for 9000
  1141 hyphenation exceptions out of 8191
  64i,21n,77p,9207b,1166s stack positions out of 5000i,500n,10000p,200000b,50000s
 <C:/Users/pscha/AppData/Local/Programs/MiKTeX 2.9/font
@@ -1512,9 +1532,9 @@ Data/Local/Programs/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmti12.pfb><C:/Us
 ers/pscha/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmtt
 12.pfb><C:/Users/pscha/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/public/ams
 fonts/symbols/msbm10.pfb>
-Output written on Masterarbeit.pdf (29 pages, 294513 bytes).
+Output written on Masterarbeit.pdf (35 pages, 312285 bytes).
 PDF statistics:
- 170 PDF objects out of 1000 (max. 8388607)
+ 189 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
  13 words of extra memory for PDF output out of 10000 (max. 10000000)
 

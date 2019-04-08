@@ -21,6 +21,7 @@
 \usepackage{amsmath, amssymb, amsthm}                             % LaTeX-Erweiterungen der AMS
 \DeclareMathOperator*{\argmax}{arg\,max}
 \DeclareMathOperator*{\sign}{sign}
+\DeclareMathOperator*{\diag}{diag}
 \usepackage{harvard}                                              % fuer Beispiel-Literaturverzeichnis
 \usepackage{tikz}
 \usetikzlibrary{patterns,decorations.pathreplacing}
@@ -180,7 +181,7 @@ Let $\dot x(t) = f\left(t,x(t)\right)$ be an \ac{ODE} and $x_0, \tilde{x}_0$ ini
 \end{equation}
 \end{definition}
 
-Stability describes the property, that solutions of the same \ac{ODE} with different initial values are close to each other if the initial values are close to each other. A slightly weaker formulation of stability is derived in the following lines, providing a criterion which can be used in chapter \ref{chap:AotPS}.
+Stability describes the property, that solutions of the same \ac{ODE} with different initial values are close to each other if the initial values are close to each other. %A slightly weaker formulation of stability is derived in the following lines, providing a criterion which can be used in chapter \ref{chap:AotPS}.
 
 For two solutions $x(t), \tilde{x}(t)$ of $\dot x(t) = f\left(t,x(t)\right)$ let $y(t) := x(t) - \tilde{x}(t)$ be the difference of the solutions. If $y(t)$ is bounded, the \ac{ODE} is stable.
 \begin{align*}
@@ -193,9 +194,45 @@ f(t,x(t)) = f(t,\tilde{x}(t)) + f_x(t,\tilde{x}(t)) y(t) + \dots
 \end{equation*}
 Inserting this gives
 \begin{equation}
-\dot{y}(t) = f_x(t,\tilde{x}(t)) y(t) + \dots
+\dot{y}(t) = f_x(t,\tilde{x}(t)) y(t) + r(t,x(t),\tilde{x}(t))%\dots
 \label{eq:ODEStab}
 \end{equation}
+with the residual $r(t,x,\tilde{x})$. 
+Neglecting the residual term, (\ref{eq:ODEStab}) gives the \ac{ODE}
+\begin{equation}
+\dot{y}(t) = J(t) y(t)
+\label{eq:vareq}
+\end{equation}
+with $J(t)$ being the Jacobian $f_x(t,\tilde{x}(t))$. This equation is called the variational equation of the \ac{ODE}.
+
+In the constant coefficient case $J(t) = J \forall t \in [t_0,T]$, the stability of \ref{eq:vareq} can be verified through examining the eigenvalues of $J$.
+
+\begin{definition}[Stability]
+The \ac{ODE} $\dot{y}(t) = J y(t)$ is called \emph{stable} on the time interval $[t_0,T]$, if the following holds:
+\begin{align}
+\underset{j=1,\dots,k}{max} \Re (\lambda_j(J)) &\leq  0 \\
+\underset{l=k+1,\dots,n}{max} \Re (\lambda_l(J)) &<  0
+\label{eq:stab2}
+\end{align}
+with $\lambda_j(J)$ being a singular eigenvalue of $J$ for $j=1,\dots,k$ and $\lambda_l(J)$ being a nonsingular eigenvalue of $J$ for $l=k+1,\dots,m$.
+\end{definition}
+
+In the non-constant coefficient case the stability can not directly be checked via looking at the eigenvalues of $J(t)$, especially when $J(t)$ is changing fast with $t$. A more involved method using the kinematic eigenvalues as in \cite{nsobvpfode}, is required to derive stability properties for this kind of problem. 
+
+Analogous to \cite{safdnn} we define a weaker criterion, using the eigenvalues in the non-constant coefficient case. This criterion will be used in section \ref{sec:SotFP} to stabilize \ac{NN} training.
+
+\begin{definition}[Weak Stability Criterion]
+Let $\dot x(t) = f\left(t,x(t)\right)$ be an \ac{ODE} and $\dot{y}(t) = J(t) y(t)$ the corresponding variational equation. The \ac{ODE} fulfills the \emph{weak stability criterion} if $J(t)$ changes sufficiently slow in $t$ and
+\begin{equation}
+\underset{j=1,\dots,n}{max} \Re (\lambda_j(J(t))) \leq  0, \hspace{0.5cm} \forall t\in[t_0,T]
+\label{eq:wstabcrit}
+\end{equation}
+with $\lambda_j(J(t))$ being the $j-$th eigenvalue of $J(t)$.
+\end{definition}
+
+\iffalse
+$+++++++++++++++++++++++$
+
 A discretization $t_0 < t_1 < \dots < t_m = T$ of the time horizon and a piecewise constant approximation $J_{t_i}$ of the Jacobian $f_x(t,\tilde{x}(t))$ for $t \in [t_i,t_{i+1})$ yields the linear \acp{ODE} 
 \begin{equation*}
 \dot y(t) = J_{t_i} y(t), \hspace{0.5cm} \forall t \in [t_i, t_{i+1}), i = 0, \dots, m-1
@@ -211,6 +248,9 @@ The \ac{ODE} $\dot x(t) = f\left(t,x(t)\right)$ is called \emph{weakly-stable} o
 \end{align}
 with $\lambda_j(J_{t_i})$ being a singular eigenvalue of $J_{t_i}$ for $j=1,\dots,k$ and $\lambda_l(J_{t_i})$ being a nonsingular eigenvalue of $J_{t_i}$ for $l=k+1,\dots,m$.
 \end{definition}
+
+$++++++++++++++++$
+\fi
 
 Plenty of methods for solving \acp{IVP} numerically exist, with the forward Euler method being one of the simplest. It can be motivated by using finite differences for approximating the derivative in discrete time points $t_0 < t_1 < \dots < t_m = T$:
 \begin{equation*}
@@ -807,7 +847,9 @@ In these cases every difference of $x^i_{T}$ and $y^i$ are penalized. If the pre
 \end{equation*}
 with the margin $\epsilon$ can be used.
 
+
 \section{Forward Propagation and \acp{ODE}}
+\label{sec:fpaode}
 In this section the forward propagation of \ac{NN}, as presented in chapter \ref{chap:NNA} will be combined with \acp{ODE} and their discretization from section \ref{sec:na}.  \cite{mpbafdl} \newline
 
 As seen in lemma (\ref{lem:fwp}) the forward propagation in an \ac{NN} can be written as
@@ -884,8 +926,112 @@ For \acp{RNN} of degree 2, the forward propagation can be written as a forward E
 In this chapter we will consider stability properties of the forward propagation with the prerequisites of section \ref{sec:na} and use the \ac{PMP} of section \ref{sec:oc} to get necessary conditions for optimality for \ac{NN} learning.
 
 \section{Stability of the Forward Propagation}
+\label{sec:SotFP}
 This section is based on \cite{safdnn}.
 
+As seen in section \ref{sec:fpaode}, the forward propagation of a \ac{NN} can be interpreted as a discretization of an \ac{ODE}. We now consider the stability conditions of section \ref{sec:na} to ensure the stability of the forward propagation. 
+
+\subsection{Goal of Stability}
+There are two main reasons why stability is a desired property of the forward propagation. \newline
+
+The first one is, that it results in a good generalization. A \ac{NN} is said to generalize well, if the classification or regression of new data (e.g. the test set) has a high accuracy. This directly corresponds to the stability property, as we want examples with similar features ($\widehat{=}$ close initial values) to result in a similar output in the regression, or the same class in classification ($\widehat{=}$ close solutions). \newline
+
+The second one is, that stability ensures the preservation of the magnitude of feature values in the forward propagation. This helps against the problems of vanishing or exploding gradients in training with backpropagation. 
+
+The vanishing gradient problem describes the problem, that small feature values and small value changes in between the hidden layers result in a vanishing of the backpropagated error in the first layers. This results in small weight updates and therefore in slow training. 
+
+The exploding gradient problem describes the problem, that large feature values and large value changes in between the hidden layers result in a growth of the backpropagated error. This results in large weight updates and therefore may lead to divergence.
+
+Both problems are more likely to occur in deep networks.
+
+\subsection{Stability Conditions}
+Consider \acp{RNN} with degree 2. The forward propagation can be written as a forward Euler discretization as in \ref{eq:ResNetFwEul}. The underlying \ac{ODE}, including the weights, biases and activation functions, writes as follows:
+
+\begin{align}
+\dot x(t) &= \phi(W(t) x(t) + b(t)) , \hspace{0.5cm}t\in [t_0,T] \\
+x(t_0) &= \bar{x} 
+\end{align} 
+
+$\phi(x)$ denotes the element-wise application of the activation function $\phi$ on $x\in\mathbb{R}^n$.
+
+For this \ac{ODE} the weak stability criterion (\ref{eq:wstabcrit}) requires the Jacobian $J$ of the right hand side to change sufficiently slow and its eigenvalues to be lesser than or equal to zero. 
+With $f(t, x(t)) = \phi(W(t) x(t) + b(t))$ the Jacobian takes the following form:
+\begin{equation}
+J(t) = \frac{\partial (f_1, \dots, f_{n_x})}{\partial (x_1, \dots, x_{n_x})}(t) = \diag(\phi'(W(t) x(t) + b(t))) W(t)
+\label{eq:jac}
+\end{equation}
+
+Since the activation function $\phi(\cdot)$ is element-wise non decreasing $\diag(\phi'(W(t) x(t) + b(t)))$ is a non negative diagonal matrix. A criterion on the eigenvalues of $W(t)$ is desired, but in contrast to the statement in \cite{safdnn} a pure restriction, namely
+\begin{equation*}
+\underset{i=1,\dots,n}{max}\Re(\lambda_i(W(t))) \leq 0, \hspace{0.5cm}\forall t \in [t_0,T]
+\end{equation*}
+is not sufficient, as the following example shows:
+
+\begin{myExample}[Positive Real-Part Jacobian]
+Let $D = \begin{pmatrix}
+	4 & 0 \\
+	0 & 1
+\end{pmatrix}$ be a diagonal matrix with non negative entries and $W = \begin{pmatrix}
+	1 & -2 \\
+	2 & -2
+\end{pmatrix}$ be a matrix with $\Re(\lambda_i(W)) = -\frac{1}{2}$ for $i=1,2$. For the product $J = D W = \begin{pmatrix}
+	4 & -8 \\
+	2 & -2
+\end{pmatrix}$ the real parts of the two eigenvalues take the value $1$.
+\end{myExample}
+
+In the next section, we construct weight matrices using antisymmetric matrices. These matrices guarantee the weak stability criterion to hold.
+
+\iffalse It follows that the weight-matrix $W(t)$ changing sufficiently slow and  
+\begin{equation}
+\underset{i=1,\dots,n}{max}\Re(\lambda_i(W(t))) \leq 0, \hspace{0.5cm}\forall t \in [t_0,T]
+\label{eq:wstab}
+\end{equation}
+are sufficient for the weak stability criterion to hold.\newline
+\fi
+
+In addition to the stability of the underlying \ac{ODE}, the forward Euler discretization has to be stable. Analogously to \ref{eq:fweulstab}, with the time discretization $t_0 < t_1 < \dots < t_m = T$, we get the condition
+\begin{equation}
+\underset{i=1,\dots,n}{max} \vert 1+h\lambda_i(J_k) \vert \leq 1,\; \forall k=1,\dots,m
+\label{eq:eulstab}
+\end{equation}
+with $J_k = \diag(\phi'(W(t_k) x(t_k) + b(t_k))) W(t_k)$ being the Jacobian at the discretization point $t_k$.
+
+This condition shows the necessity to choose an $h$ that is small enough to stabilize the forward propagation.%\newline
+
+%The next goal is to find a class of weight matrices that fulfill the condition (\ref{eq:wstab}). One possibility is to choose antisymmetric weight matrices.
+
+\subsection{Antisymmetric Weight Matrices} 
+
+\begin{definition}[Antisymmetric Matrix]
+A matrix $W \in \mathbb{R}^{n\times n}$ is called \emph{antisymmetric} if
+\begin{equation*}
+W^T = -W
+\end{equation*}
+\end{definition}
+
+What makes antisymmetric matrices interesting for constructing weight matrices are the following two properties:
+
+\begin{itemize}
+	\item For $W \in \mathbb{R}^{n\times n}$ antisymmetric it holds that $\Re(\lambda_i(W)) = 0, i=1,\dots,n$
+	\item For any $M \in \mathbb{R}^{n\times n}$, $W = M-M^T$ is antisymmetric
+\end{itemize}
+
+In the following a weight matrix construction, that is sufficient for the weak stability criterion (\ref{eq:wstabcrit}) to hold, is derived. 
+
+\begin{myLemma}[Eigenvalues of $AB$ and $BA$]
+Let $A,B \in \mathbb{R}^{n\times n}$. It holds that 
+\begin{equation}
+\Lambda(AB)=\Lambda(BA)
+\label{eq:eigs}
+\end{equation} with $\Lambda(M) := \{\lambda \vert \lambda \text{ is eigenvalue of }M\}$.
+\end{myLemma}
+\begin{proof}
+\end{proof}
+
+\begin{myLemma}[Eigenvalues of $DW$]
+Let $D\in \mathbb{R}^{n\times n}$ be a diagonal matrix with non negative entries and let $W \in \mathbb{R}^{n\times n}$ be an antisymmetric matrix. Then the matrix product $DW$ has only eigenvalues with $\Re(\lambda_i(DW)) = 0$ for $ i=1,\dots,n$.
+\end{myLemma}
 
 \section{Maximum Principle for Neural Networks}
 In this section we make use of the work in \cite{aocatdl} and \cite{mpbafdl}.
@@ -938,11 +1084,12 @@ In \cite{aocatdl} an error estimate is stated for the \ac{MSA}. This error estim
 Under certain conditions the following theorem holds.
 
 \begin{myTheorem}[Error Estimate for the \ac{MSA}]
+\label{thm:eemsa}
 Let $J(\cdot)$ be the cost-function of problem \ref{opt:nnldtocp}. A constant $C>0$ exists, such that for any weights $W, \tilde{W}$ we have
 \begin{align*}
 J(x,\tilde{W}) - J(x,W) \leq &- \sum_{k=0}^{T-1}\sum_{i=1}^s H_k(x_k^i,\tilde{W}_k,\lambda_{k+1}^i)-H_k(x_k^i,W_k,\lambda_{k+1}^i) \\
 & + \frac{C}{s} \sum_{k=0}^{T-1}\sum_{i=1}^s \Vert f_k(x_k^i,\tilde{W}_k) - f_k(x_k^i,W_k) \Vert^2 \\
-& + \frac{C}{s} \sum_{k=0}^{T-1}\sum_{i=1}^s \Vert \nabla_x f_k(x_k^i,\tilde{W}_k) - \nabla_x f_k(x_k^i,W_k) \Vert^2_2 \\
+& + \frac{C}{s} \sum_{k=0}^{T-1}\sum_{i=1}^s \Vert \nabla_x f_k(x_k^i,\tilde{W}_k) - \nabla_x f_k(x_k^i,W_k) \Vert^2 \\
 & + \frac{C}{s} \sum_{k=0}^{T-1}\sum_{i=1}^s \Vert \nabla_x L_k(x_k^i,\tilde{W}_k) - \nabla_x L_k(x_k^i,W_k) \Vert^2 \\
 \end{align*}
 with $x_k^i, \lambda_k^i, k=0,\dots,T, i=1,\dots,s$ being computed in one \ac{MSA} step, using $W$ as weights.
@@ -1023,6 +1170,75 @@ If the \ac{NN} incorporates biases, they can be updated with the following rule:
 b_k^{j+1} = \sign\left( \sum_{i=1}^s \lambda_{k+1}^i \right), k=0,\dots,T-1 
 \label{eq:bsgnmax}
 \end{equation}
+
+\subsection{Modification of the \acl{MSA} for Binary Networks}
+
+The hamilton-maximization steps (\ref{eq:wsgnmax}) and (\ref{eq:bsgnmax}) can be modified to further stabilize the learning process. For this goal consider the error estimate from theorem \ref{thm:eemsa}. Since there are no regularization terms $L_k$ in binary \acp{NN} and the layers with learnable weight have the form $f_k(x_k,W_k) = W_k x_k + b_k$, the equation for the error estimate can be simplified to:
+
+\begin{align*}
+&J(x,\tilde{W}) - J(x,W) \leq  - \sum_{k=0}^{T-1}\sum_{i=1}^s H_k(x_k^i,\tilde{W}_k,\lambda_{k+1}^i)-H_k(x_k^i,W_k,\lambda_{k+1}^i) \\
+& + \underbrace{\frac{C}{s} \sum_{k=0}^{T-1}\sum_{i=1}^s \Vert \tilde{W}_k x_k^i + \tilde{b}_k - (W_k x_k^i + b_k) \Vert^2 }_{T_1}
+ +  \underbrace{\frac{C}{s} \sum_{k=0}^{T-1} s \Vert \tilde{W}_k - W_k \Vert^2_F }_{T_2}
+\end{align*}
+
+Looking at the error terms $T_1$ and $T_2$ we get the following estimation:
+
+\begin{align*}
+T_1 + T_2 \leq &  \frac{C}{s} \sum_{k=0}^{T-1}\sum_{i=1}^s \Vert (\tilde{W}_k - W_k) x_k^i\Vert^2 + \Vert \tilde{b}_k -  b_k \Vert^2 + 2 \langle (\tilde{W}_k - W_k) x_k^i,  \tilde{b}_k -  b_k \rangle +  T_2 \\
+\leq &  \frac{C}{s} \sum_{k=0}^{T-1}\left(s + \sum_{i=1}^s \Vert x_k^i \Vert^2 \right) \Vert \tilde{W}_k - W_k \Vert^2_F + s \Vert \tilde{b}_k -  b_k \Vert^2 \\
+& + \frac{2C}{s}  \sum_{k=0}^{T-1}\sum_{i=1}^s \langle (\tilde{W}_k - W_k) x_k^i,  \tilde{b}_k -  b_k \rangle
+\end{align*}
+
+With this estimation it can be seen, that not only the hamiltonian needs to be maximized to reduce the cost-function. Additionally the error terms introduced by changing the weights and biases need to be minimized. To incorporate this in the \ac{MSA} the weight update (step 6 in algorithm \ref{alg:msa} or (\ref{eq:wsgnmax})) changes to
+
+\begin{equation*}
+W_k^{j+1} = \underset{W\in \Omega}{\argmax} \sum_{i=1}^s{H_k(x_k^{i},W,\lambda_{k+1}^{i}) - \rho_k \Vert W - W_k^j \Vert^2_F}
+\end{equation*}
+
+or explicitly to
+
+\begin{equation}
+[W_k^{j+1}]_{lm} = \begin{cases} \sign\left([M_k]_{lm}\right), & \text{if }\vert[M_k]_{lm} \vert \geq \rho_k \\
+																	[W_k^j]_{lm},                & \text{else} \end{cases}
+, k=0,\dots,T-1
+\label{eq:wsgnmaxpen}
+\end{equation}
+
+with $M_k = \sum_{i=1}^s \lambda_{k+1}^i ({x_k^i})^T$ and $\rho_k$ a layer-wise penalization parameter. 
+
+For the biases there are different possibilities to modify the update step. The first one is analogous to the weight step
+
+\begin{equation}
+[b_k^{j+1}]_{l} = \begin{cases} \sign\left([m_k]_{l}\right), & \text{if }\vert[m_k]_{l} \vert \geq \rho_k \\
+																	[b_k^j]_{l},                & \text{else} \end{cases}
+, k=0,\dots,T-1
+\label{eq:bsgnmaxpen}
+\end{equation}
+with $m_k = \sum_{i=1}^s \lambda_{k+1}^i $ and $\rho_k$ a layer-wise penalization parameter. 
+
+Another way is to choose 
+
+\begin{equation}
+b_k^{j+1} = \sign\left( \sum_{i=1}^s \lambda_{k+1}^i-(W_k^{j+1}-W_k^j)x_k^i \right), k=0,\dots,T-1
+\label{eq:bsgnmaxx}
+\end{equation}
+ with the intention to minimize the scalar product term in the estimation.\newline
+
+The \ac{MSA} with the modified update steps is the foundation for the implementation in chapter \ref{chap:Impl}, where additional methods for stabilizing the training process are discussed.
+
+% -----------------------------------------------------------------------------------------
+% Implementierung
+% -----------------------------------------------------------------------------------------
+\chapter{Implementation}
+\label{chap:Impl}
+
+
+
+
+
+
+
+
 
 % -----------------------------------------------------------------------------------------
 % Numerische Ergebnisse

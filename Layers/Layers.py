@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import random
 import os
+import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -145,28 +146,31 @@ class MSALinearLayer(nn.Module):
         #print(res)
         return res
 
-    def set_weights(self, layer_index, x_dict, lambda_dict, batch_size):
+    def set_weights_and_biases(self, layer_index, x_dict, lambda_dict, batch_size):
         self.linear.weight.grad.data.zero_()
-        #m = torch.zeros(self.linear.out_features, self.linear.in_features, dtype=torch.float32)#
-        #for i in range(batch_size):
+    
+        self.set_weights(layer_index, x_dict, lambda_dict, batch_size)
+
+        if self.has_bias:
+            self.set_biases(layer_index, x_dict, lambda_dict, batch_size)
+
+
+    def set_weights(self, layer_index, x_dict, lambda_dict, batch_size):
         lambda_key = 'lambda_'+'FC'+str(layer_index+1)
         x_key = 'x_'+'FC'+str(layer_index)
         temp = torch.sum(self.hamilton(x_dict.get(x_key),lambda_dict.get(lambda_key)))
         temp.backward()
         m = self.linear.weight.grad
-        #print(m)
-        #print(lambda_dict.get(lambda_key))
-        #m += torch.matmul(lambda_dict.get(lambda_key).reshape(-1,1),x_dict.get(x_key).reshape(1,-1))
-        #m = (1 / batch_size) * m
+        
         self.m_accumulated = self.ema_alpha * self.m_accumulated + ( 1 - self.ema_alpha ) * m
         old_weight_signs = self.linear.weight
         new_weight_signs = torch.sign(self.m_accumulated)
-        compared_weight_signs = torch.tensor(torch.ne(new_weight_signs, old_weight_signs).detach(), dtype=torch.float32)
+        compared_weight_signs = torch.ne(new_weight_signs, old_weight_signs).clone().detach().type(torch.FloatTensor)
         reduced_m = torch.abs(compared_weight_signs * self.m_accumulated)
         
         max_weight_elem = torch.max(reduced_m)
         
-        new_weights = new_weight_signs*torch.tensor(torch.ge(torch.abs(self.m_accumulated),self.rho*max_weight_elem*torch.ones_like(self.m_accumulated)).detach(),dtype=torch.float32)
+        new_weights = new_weight_signs*torch.ge(torch.abs(self.m_accumulated),self.rho*max_weight_elem*torch.ones_like(self.m_accumulated)).clone().detach().type(torch.FloatTensor)
         zero_weight_indices = (new_weights == 0).nonzero()
 
         for index in zero_weight_indices:
@@ -175,21 +179,52 @@ class MSALinearLayer(nn.Module):
         new_matr = nn.Parameter(new_weights)
         self.linear.weight = new_matr
 
+
+    def set_biases(self, layer_index, x_dict, lambda_dict, batch_size):
+        m2 = torch.zeros(self.linear.out_features, dtype=torch.float32)
+        #for i in range(batch_size):
+        lambda_key = 'lambda_'+'FC'+str(layer_index+1)
+
+        x_old_key = 'x_FC'+str(layer_index)
+        x_new_old_key = 'x_FC'+str(layer_index+1)
+        x_new_new = self.forward(x_dict[x_old_key])
+        x = x_dict[x_new_old_key] - x_new_new
+
+        m2 = torch.sum(lambda_dict.get(lambda_key), dim=0) + torch.sum(x, dim=0)
+        #m2 = (1 / batch_size) * m2
+        self.m2_accumulated = self.ema_alpha * self.m2_accumulated + ( 1 - self.ema_alpha ) * m2
+        old_bias_signs = self.linear.bias
+        new_bias_signs = torch.sign(self.m2_accumulated)
+        #compared_bias_signs = torch.tensor(torch.ne(new_bias_signs, old_bias_signs).detach(), dtype=torch.float32)
+        #reduced_m2 = torch.abs(compared_bias_signs * self.m2_accumulated)
+        #max_bias_elem = torch.max(reduced_m2)
+        #new_biases = new_bias_signs*torch.tensor(torch.ge(torch.abs(self.m2_accumulated),self.rho*max_bias_elem*torch.ones_like(self.m2_accumulated)).detach(),dtype=torch.float32)
+        #zero_bias_indices = (new_biases == 0).nonzero()
+        #for index in zero_bias_indices:
+        #    print('zero bias!!')
+        #    new_biases[index[0]] = old_bias_signs[index[0]]
+        #new_vec = nn.Parameter(new_biases)
+        new_vec = nn.Parameter(new_bias_signs)
+        self.linear.bias = new_vec
+
+
+class AntiSymLayer(nn.Module):
+    def __init__(self, features, gamma, bias=False):
+        super().__init__()
+        self.features = features
+        self.gamma = gamma
+        self.has_bias = bias
+
+        self.weight = nn.Parameter(torch.zeros(features,features).uniform_(-1/math.sqrt(features),1/math.sqrt(features)))
         if self.has_bias:
-            m2 = torch.zeros(self.linear.out_features, dtype=torch.float32)
-            #for i in range(batch_size):
-            lambda_key = 'lambda_'+'FC'+str(layer_index+1)
-            m2 = torch.sum(lambda_dict.get(lambda_key), dim=0)
-            #m2 = (1 / batch_size) * m2
-            self.m2_accumulated = self.ema_alpha * self.m2_accumulated + ( 1 - self.ema_alpha ) * m2
-            old_bias_signs = self.linear.bias
-            new_bias_signs = torch.sign(self.m2_accumulated)
-            compared_bias_signs = torch.tensor(torch.ne(new_bias_signs, old_bias_signs).detach(), dtype=torch.float32)
-            reduced_m2 = torch.abs(compared_bias_signs * self.m2_accumulated)
-            max_bias_elem = torch.max(reduced_m2)
-            new_biases = new_bias_signs*torch.tensor(torch.ge(torch.abs(self.m2_accumulated),self.rho*max_bias_elem*torch.ones_like(self.m2_accumulated)).detach(),dtype=torch.float32)
-            zero_bias_indices = (new_biases == 0).nonzero()
-            for index in zero_bias_indices:
-                new_biases[index[0]] = old_bias_signs[index[0]]
-            new_vec = nn.Parameter(new_biases)
-            self.linear.bias = new_vec
+            self.bias = nn.Parameter(torch.zeros(features).uniform_(-1/math.sqrt(features),1/math.sqrt(features)))
+        self.eye = torch.eye(features)
+
+
+    def forward(self, x):
+        
+        if self.has_bias:
+            res = torch.addmm(self.bias, x, 1/2 * (self.weight - self.weight.t() - self.gamma * self.eye))
+        else:
+            res = x.matmul(1/2 * (self.weight - self.weight.t() - self.gamma * self.eye))
+        return res

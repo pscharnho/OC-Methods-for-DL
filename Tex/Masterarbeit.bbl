@@ -6,6 +6,12 @@ Justin~Johnson Andrej~Karpathy.
 \newblock \url{http://cs231n.github.io/}.
 \newblock Stanford CS231n lecture notes. Accessed: 2019-01-07.
 
+\bibitem[AMR95]{nsobvpfode}
+U.~Ascher, R.~Mattheij, and R.~Russell.
+\newblock {\em Numerical Solution of Boundary Value Problems for Ordinary
+  Differential Equations}.
+\newblock Society for Industrial and Applied Mathematics, 1995.
+
 \bibitem[Gor17]{mlcba}
 Marco Gori.
 \newblock {\em Machine Learning: A Constraint-Based Approach}.
