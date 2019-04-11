@@ -17,7 +17,7 @@ class MNISTDataset(torch.utils.data.Dataset):
         self.len = len(self.data['label'].values)
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
             
-        self.features = torch.tensor(self.data.drop('label',axis=1).values.astype(np.float32), device=self.device).reshape(-1,784)/255    #.reshape(-1,1,28,28)/255 
+        self.features = torch.tensor(self.data.drop('label',axis=1).values.astype(np.float32), device=self.device).reshape(-1,1,28,28)/255   #.reshape(-1,784)/255 
         #self.labels = self.one_hot(self.data['label'].values,10)
         self.labels = self.data['label']
     
@@ -39,7 +39,7 @@ def loadMNIST(root_train, root_test):
     train_loader = torch.utils.data.DataLoader(train, batch_size=100)
 
     test = MNISTDataset(root_test)
-    test_loader = torch.utils.data.DataLoader(test)
+    test_loader = torch.utils.data.DataLoader(test, batch_size=100)
     return train_loader, test_loader
 
 

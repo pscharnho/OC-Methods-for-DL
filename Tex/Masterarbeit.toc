@@ -13,6 +13,7 @@
 \contentsline {subsection}{\numberline {3.3.2}Pooling Layer}{10}
 \contentsline {subsection}{\numberline {3.3.3}Activation Layer}{11}
 \contentsline {subsection}{\numberline {3.3.4}Fully-Connected Layer}{11}
+\contentsline {section}{\numberline {3.4}Training of \aclp {NN}}{11}
 \contentsline {chapter}{\numberline {4}Neural Network Learning as Optimal Control Problem}{12}
 \contentsline {section}{\numberline {4.1}Loss-Functions}{12}
 \contentsline {subsection}{\numberline {4.1.1}Classification Task}{13}

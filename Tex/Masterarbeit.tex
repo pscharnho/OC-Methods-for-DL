@@ -722,6 +722,9 @@ where $I_{J,K,L}$ is a $n_f \times n_f \times n_c$ sub-tensor of $I$ and $J:=\{(
 %$I_{[a+1:a+n_f],[b+1:b+n_f],[1:n_c]}$
 \end{definition}
 
+TODO:
+Tikz
+
 %An image of size $n_{px} \times n_{py}$ with $n_c$ channels gets convolved to an image of size $\left(\frac{n_{px}-n_f+2p}{s+1}\right)\times \left(\frac{n_{py}-n_f+2p}{s+1}\right)$ with $d$ channels.
 
 
@@ -750,20 +753,26 @@ In practice different pooling-functions are used with max-pooling being the most
 
 Through the pooling no additional learnable parameters are added.
 
+TODO:
+Tikz
+
 \subsection{Activation Layer}
 \label{subsec:AL}
 The activation-functions we introduced in \ref{actFct} are also important in \acp{CNN}. They perform elementwise operations but we seperate them from the convolutional layers for better clarity.
 
 An activation layer needs no additional learnable parameters.
 
+TODO:
 example structure: conv->relu->conv->relu->pool->...
 
 \subsection{Fully-Connected Layer}
 \label{subsec:FCL}
 The last part of a \ac{CNN} consists of fully connected layers. This fully connected part is equivalent to a feedforward neural network without shortcut connections and the output of the last previous layer (e.g. pooling layer or activation layer) as input. 
 
+TODO:
 Example of a complete \ac{CNN}.
 
+\section{Training of \aclp{NN}}
 
 % -----------------------------------------------------------------------------------------
 % Neuronale Netze als OCP
@@ -1232,6 +1241,7 @@ The \ac{MSA} with the modified update steps is the foundation for the implementa
 \chapter{Implementation}
 \label{chap:Impl}
 
+The implementations can be found at \url{https://github.com/pscharnho/OC-Methods-for-DL/}.
 
 
 

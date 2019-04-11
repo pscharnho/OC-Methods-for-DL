@@ -25,6 +25,20 @@ class ReluLayer(nn.Module):
         return res
 
 
+class Relu2dLayer(nn.Module):
+    def __init__(self):
+        super(Relu2dLayer, self).__init__()
+        self.name = 'Relu'
+
+    def forward(self, x):
+        x = F.relu(x)
+        return x
+
+    def hamilton(self, x, lambd):
+        x_neu = self.forward(x)
+        res = torch.sum(x_neu*lambd, dim=(1,2,3))
+        return res
+
 class TanhLayer(nn.Module):
     def __init__(self):
         super(TanhLayer, self).__init__()
@@ -39,6 +53,19 @@ class TanhLayer(nn.Module):
         res = torch.sum(x_neu*lambd, dim=1)
         return res
 
+class Tanh2dLayer(nn.Module):
+    def __init__(self):
+        super(Tanh2dLayer, self).__init__()
+        self.name = 'Tanh'
+
+    def forward(self, x):
+        x = torch.tanh(x)
+        return x
+
+    def hamilton(self, x, lambd):
+        x_neu = self.forward(x)
+        res = torch.sum(x_neu*lambd, dim=(1,2,3))
+        return res
 
 class CustomBatchNorm1d(nn.BatchNorm1d):
     def __init__(self, num_features, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True):
@@ -51,42 +78,71 @@ class CustomBatchNorm1d(nn.BatchNorm1d):
         return res
 
 
+class CustomBatchNorm2d(nn.BatchNorm2d):
+    def __init__(self, num_features, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True):
+        super().__init__(num_features, eps, momentum, affine, track_running_stats)
+        self.name = 'BatchNorm'
+
+
+    def hamilton(self, x, lambd):
+        x_neu = self.forward(x)
+        res = torch.sum(x_neu*lambd, dim=(1,2,3))
+        return res
+
+
+
 class MSAConvLayer(nn.Module):
     '''Convolutional layer with additional parameters (states and co-states) and the Hamilton-Function'''
-    def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0):
+    def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=1):
         super(MSAConvLayer, self).__init__()
-        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size, stride=stride, padding=padding)
-        self.hamilton_conv = nn.Conv2d(in_channels, out_channels, kernel_size, stride=stride, padding=padding)
+        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding, bias=False)
         self.accumulated_m = None
-        self.lambda_shape = None
+        self.name = 'Conv'
+        self.initialize_weights()
+        self.rho = 0.5
+        self.ema_alpha = 0.99
         
+
+    def initialize_weights(self):
+        weights = nn.Parameter(torch.sign(self.conv.weight))
+        self.conv.weight = nn.Parameter(weights)
+        self.m_accumulated = 0.001 * self.conv.weight.clone().detach()
+
 
     def forward(self, x):
-        self.states = nn.Parameter(x)
         x = self.conv(x)
-        if self.lambda_shape == None:
-            self.lambda_shape = x.shape
         return x
 
-    def dHdx(self, lambda_t_new):
-        '''needs reshaping!!! Consider num_channels'''
-        hamilton = torch.mm(lambda_t_new.view(1,-1), self.conv(self.states).view(1,-1).transpose(0,1))
-        hamilton.backward()
-        lambda_t = self.states.grad
-        self.states.grad.zero_()
-        return lambda_t
 
-    def hamilton_max(self, lambda_t_new):
-        shape = list(self.hamilton_conv.parameters())[0].shape
-        list(self.hamilton_conv.parameters())[0] = nn.Parameter(lambda_t_new.reshape(self.lambda_shape))
-        if self.accumulated_m == None:
-            self.accumulated_m = self.hamilton_conv(self.states)
-        else:
-            self.accumulated_m += self.hamilton_conv(self.states)
+    def hamilton(self, x, lambd):
+        x_neu = self.forward(x)
+        res = torch.sum(x_neu*lambd, dim=(1,2,3)) # x.dim() => 4
+        return res
 
         
-    def update_weights(self):
-        pass
+    def set_weights(self, layer_index, x_dict, lambda_dict):
+        self.conv.weight.grad.data.zero_()
+        lambda_key = 'lambda_Conv'+str(layer_index+1)
+        x_key = 'x_Conv'+str(layer_index)
+        temp = torch.sum(self.hamilton(x_dict.get(x_key),lambda_dict.get(lambda_key)))
+        temp.backward()
+        m = self.conv.weight.grad
+        
+        self.m_accumulated = self.ema_alpha * self.m_accumulated + ( 1 - self.ema_alpha ) * m
+        old_weight_signs = self.conv.weight
+        new_weight_signs = torch.sign(self.m_accumulated)
+        compared_weight_signs = torch.ne(new_weight_signs, old_weight_signs).clone().detach()#.type(torch.FloatTensor)
+        abs_acc = torch.abs(self.m_accumulated)
+        reduced_m = torch.where(compared_weight_signs, abs_acc, torch.zeros_like(abs_acc))
+        max_weight_elem = torch.max(reduced_m)
+        
+        new_weights = torch.where(abs_acc>=(self.rho*max_weight_elem), new_weight_signs, torch.zeros_like(abs_acc))
+
+        new_matr = nn.Parameter(torch.where(new_weights == 0, old_weight_signs, new_weights))
+
+        #new_matr = nn.Parameter(new_weights)
+        self.conv.weight = new_matr
+
 
 
 class MSALinearLayer(nn.Module):
@@ -137,25 +193,20 @@ class MSALinearLayer(nn.Module):
 
     def hamilton(self, x, lambd):
         x_neu = self.forward(x)
-        #print('X_neu')
-        #print(x_neu)
-        #print('Lambda')
-        #print(lambd)
         res = torch.sum(x_neu*lambd, dim=1)
-        #print('Hamilton')
-        #print(res)
         return res
 
-    def set_weights_and_biases(self, layer_index, x_dict, lambda_dict, batch_size):
+    def set_weights_and_biases(self, layer_index, x_dict, lambda_dict):
         self.linear.weight.grad.data.zero_()
     
-        self.set_weights(layer_index, x_dict, lambda_dict, batch_size)
+        self.set_weights(layer_index, x_dict, lambda_dict)
 
         if self.has_bias:
-            self.set_biases(layer_index, x_dict, lambda_dict, batch_size)
+            self.set_biases(layer_index, x_dict, lambda_dict)
 
 
-    def set_weights(self, layer_index, x_dict, lambda_dict, batch_size):
+    def set_weights(self, layer_index, x_dict, lambda_dict):
+        
         lambda_key = 'lambda_'+'FC'+str(layer_index+1)
         x_key = 'x_'+'FC'+str(layer_index)
         temp = torch.sum(self.hamilton(x_dict.get(x_key),lambda_dict.get(lambda_key)))
@@ -165,22 +216,24 @@ class MSALinearLayer(nn.Module):
         self.m_accumulated = self.ema_alpha * self.m_accumulated + ( 1 - self.ema_alpha ) * m
         old_weight_signs = self.linear.weight
         new_weight_signs = torch.sign(self.m_accumulated)
-        compared_weight_signs = torch.ne(new_weight_signs, old_weight_signs).clone().detach().type(torch.FloatTensor)
-        reduced_m = torch.abs(compared_weight_signs * self.m_accumulated)
-        
+        compared_weight_signs = torch.ne(new_weight_signs, old_weight_signs).clone().detach()#.type(torch.FloatTensor)
+        #reduced_m = torch.abs(compared_weight_signs * self.m_accumulated)
+        abs_acc = torch.abs(self.m_accumulated)
+        reduced_m = torch.where(compared_weight_signs, abs_acc, torch.zeros_like(abs_acc))
         max_weight_elem = torch.max(reduced_m)
-        
-        new_weights = new_weight_signs*torch.ge(torch.abs(self.m_accumulated),self.rho*max_weight_elem*torch.ones_like(self.m_accumulated)).clone().detach().type(torch.FloatTensor)
-        zero_weight_indices = (new_weights == 0).nonzero()
 
-        for index in zero_weight_indices:
-            new_weights[index[0]][index[1]] = old_weight_signs[index[0]][index[1]]
+        #new_weights = new_weight_signs*torch.ge(torch.abs(self.m_accumulated),self.rho*max_weight_elem*torch.ones_like(self.m_accumulated)).clone().detach().type(torch.FloatTensor)
+        new_weights = torch.where(abs_acc>=(self.rho*max_weight_elem), new_weight_signs, torch.zeros_like(abs_acc))
+        #zero_weight_indices = (new_weights == 0).nonzero()
 
-        new_matr = nn.Parameter(new_weights)
+        #for index in zero_weight_indices:
+        #    new_weights[index[0]][index[1]] = old_weight_signs[index[0]][index[1]]
+        new_matr = nn.Parameter(torch.where(new_weights == 0, old_weight_signs, new_weights))
+        #new_matr = nn.Parameter(new_weights)
         self.linear.weight = new_matr
 
 
-    def set_biases(self, layer_index, x_dict, lambda_dict, batch_size):
+    def set_biases(self, layer_index, x_dict, lambda_dict):
         m2 = torch.zeros(self.linear.out_features, dtype=torch.float32)
         #for i in range(batch_size):
         lambda_key = 'lambda_'+'FC'+str(layer_index+1)

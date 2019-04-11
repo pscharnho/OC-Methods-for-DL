@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.19 (MiKTeX 2.9.6840 64-bit) (preloaded format=pdflatex 2018.12.2)  8 APR 2019 10:08
+This is pdfTeX, Version 3.14159265-2.6-1.40.19 (MiKTeX 2.9.6840 64-bit) (preloaded format=pdflatex 2018.12.2)  8 APR 2019 16:16
 entering extended mode
 **./Masterarbeit.tex
 (Masterarbeit.tex
@@ -1342,14 +1342,14 @@ LaTeX Font Info:    Try loading font information for U+msb on input line 2.
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
 Package acronym Info: Label `acro:ODE' newly defined as it shall be overridden
-although it is yet undefined on input line 20.
-)
+although it is yet undefined on input line 21.
+[3
+
+])
 \tf@toc=\write5
 \openout5 = `Masterarbeit.toc'.
 
- [3
-
-] [4] [5
+ [4] [5
 
 
 ] (Masterarbeit.lof
@@ -1423,36 +1423,36 @@ Underfull \hbox (badness 10000) in paragraph at lines 703--704
 [10] [11]
 chapter 4.
 
-Underfull \hbox (badness 10000) in paragraph at lines 774--775
+Underfull \hbox (badness 10000) in paragraph at lines 783--784
 
  []
 
 [12
 
 ]
-Underfull \hbox (badness 10000) in paragraph at lines 853--854
+Underfull \hbox (badness 10000) in paragraph at lines 862--863
 
  []
 
 [13]
-Underfull \hbox (badness 10000) in paragraph at lines 886--887
+Underfull \hbox (badness 10000) in paragraph at lines 895--896
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 892--893
+Underfull \hbox (badness 10000) in paragraph at lines 901--902
 
  []
 
 [14] [15]
 chapter 5.
 
-Underfull \hbox (badness 10000) in paragraph at lines 935--936
+Underfull \hbox (badness 10000) in paragraph at lines 944--945
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 937--938
+Underfull \hbox (badness 10000) in paragraph at lines 946--947
 
  []
 
@@ -1460,24 +1460,30 @@ Underfull \hbox (badness 10000) in paragraph at lines 937--938
 
 ] [17] [18]
 Package acronym Info: Label `acro:MSA' newly defined as it shall be overridden
-although it is yet undefined on input line 1059.
+although it is yet undefined on input line 1068.
 
-Underfull \hbox (badness 10000) in paragraph at lines 1063--1065
+Underfull \hbox (badness 10000) in paragraph at lines 1072--1074
 
  []
 
 [19]
-Underfull \hbox (badness 10000) in paragraph at lines 1101--1102
+Underfull \hbox (badness 10000) in paragraph at lines 1110--1111
 
  []
 
 [20] [21]
-Underfull \hbox (badness 10000) in paragraph at lines 1224--1226
+Underfull \hbox (badness 10000) in paragraph at lines 1233--1235
 
  []
 
 [22] [23]
 chapter 6.
+
+Overfull \hbox (43.66652pt too wide) in paragraph at lines 1244--1245
+\OT1/cmr/m/n/12 The im-ple-men-ta-tions can be found at $\OT1/cmtt/m/n/12 https
+ : / / github . com / pscharnho / OC-[]Methods-[]for-[]DL/$\OT1/cmr/m/n/12 . 
+ []
+
 [24
 
 ]
@@ -1497,7 +1503,7 @@ chapter A.
 
 
 ]
-Underfull \hbox (badness 10000) in paragraph at lines 1273--1276
+Underfull \hbox (badness 10000) in paragraph at lines 1283--1286
 
  []
 
@@ -1532,7 +1538,7 @@ Data/Local/Programs/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmti12.pfb><C:/Us
 ers/pscha/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmtt
 12.pfb><C:/Users/pscha/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/public/ams
 fonts/symbols/msbm10.pfb>
-Output written on Masterarbeit.pdf (35 pages, 312285 bytes).
+Output written on Masterarbeit.pdf (35 pages, 314304 bytes).
 PDF statistics:
  189 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
