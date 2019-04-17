@@ -26,13 +26,15 @@ class BasicVarFCNet(nn.Module):
     
     Attributes:
             num_fc (int): number of fc layers including batchnorm and 
-                activation layers
-            fc_keys (list of str): names of the fc layers
-            layers_dict (dict): dict containing the layer objects
-            x_dict (dict): dict containing the intermediate values 
+                activation layers.
+            fc_keys (list of str): names of the fc layers.
+            layers_dict (dict): dict containing the layer objects.
+            x_dict (dict): dict containing the intermediate values .
+            track_test (bool): Whether to track the test results.
 
     Methods:
-            forward(x): forward propagation of x. Needs to be implemented for subclasses
+            forward(x): forward propagation of x. Needs to be implemented for subclasses.
+            set_test_tracking(value): Set the option to track test results per epoch.
     """
 
     def __init__(self, num_fc, sizes_fc, bias, batchnorm=True, test=False):
@@ -59,6 +61,8 @@ class BasicVarFCNet(nn.Module):
         self.lambda_dict = {}
         
         self._init_fc_layers(sizes_fc, bias, test, batchnorm)
+
+        self.track_test = False 
                 
     def _init_fc_layers(self, sizes_fc, bias, test, batchnorm):
         fc_layer_index = 0
@@ -68,7 +72,7 @@ class BasicVarFCNet(nn.Module):
                 fc_layer_index += 1
             fc_layer_index = 1
             for i in range(1,self.num_fc,3):
-                self.layers_dict.update({self.fc_keys[i]:CustomBatchNorm1d(int(sizes_fc[fc_layer_index]))})#ReluLayer
+                self.layers_dict.update({self.fc_keys[i]:CustomBatchNorm1d(int(sizes_fc[fc_layer_index]))})
                 fc_layer_index += 1
             for i in range(2, self.num_fc,3):
                 self.layers_dict.update({self.fc_keys[i]:ReluLayer()})#TanhLayer
@@ -78,8 +82,17 @@ class BasicVarFCNet(nn.Module):
                     self.layers_dict.update({self.fc_keys[i]:MSALinearLayer(int(sizes_fc[fc_layer_index]), int(sizes_fc[fc_layer_index+1]), bias=bias, test=test)})
                     fc_layer_index += 1
                 else:
-                    self.layers_dict.update({self.fc_keys[i]:TanhLayer()})#ReluLayer
-            
+                    self.layers_dict.update({self.fc_keys[i]:ReluLayer()})#TanhLayer
+
+
+    def set_test_tracking(self, value):
+        """ Set the option to track test results per epoch.
+        
+        Parameters:
+                value (bool): Whether to track the test results."""
+
+        self.track_test = value
+
     def forward(self, x):
         """Forward propagation of x. Needs to be implemented for subclasses"""
 
@@ -131,7 +144,7 @@ class FCMSANet(BasicVarFCNet):
         return x
 
 
-    def train_msa(self, num_epochs, dataloader):
+    def train_msa(self, num_epochs, dataloader, testloader=None, print_output=True):
         """ Trains the net using a modified version of the MSA algorithm.
 
         Introduces new attributes:
@@ -142,16 +155,21 @@ class FCMSANet(BasicVarFCNet):
         Parameters:
                 num_epochs (int): Number of epochs for training the net.
                 dataloader (torch.Dataloader): Container for training samples.
+                testloader (torch.Dataloader): Container for test samples if self.track_test is True (default is None).
+                print_output (bool): Whether to print output (default is True).
         """
 
-        tic=timeit.default_timer()
+        tic = timeit.default_timer()
         criterion = nn.CrossEntropyLoss(reduction='sum')#
         train_size = len(dataloader.dataset)*0.8
         self.avg_losses = torch.zeros(num_epochs)
         self.avg_correct_pred = torch.zeros(num_epochs)
         self.batch_size = dataloader.batch_size
+        if self.track_test:
+            self.test_results = torch.zeros(num_epochs)
+            test_size = len(testloader.dataset)*0.2
         for epoch in range(num_epochs):
-            if epoch % 10 == 0:
+            if print_output and epoch % 10 == 0:
                 print("#  Epoch  #  Avg-Loss  #  Train-Acc  ###############")
             for layer in self.layers_dict:
                 if self.layers_dict[layer].name == 'BatchNorm':
@@ -159,12 +177,16 @@ class FCMSANet(BasicVarFCNet):
                     self.layers_dict[layer].train()
             self.train_epoch(epoch, dataloader, criterion)
             self.decay_ema_alpha(0.95)
-            print("#  %d  #  %f  #  %f  #" % (epoch+1, self.loss_sum/train_size, self.correct_pred/train_size))
+            if print_output:
+                print("#  %d  #  %f  #  %f  #" % (epoch+1, self.loss_sum/train_size, self.correct_pred/train_size))
             self.avg_correct_pred[epoch] = self.correct_pred/train_size
             self.avg_losses[epoch] =  self.loss_sum/train_size
+            if self.track_test:
+                self.test_results[epoch] = self.test(testloader, test_size, print_output)
             
-        toc=timeit.default_timer()
-        print('Time elapsed: ',toc-tic)
+        toc = timeit.default_timer()
+        if print_output:
+            print('Time elapsed: ',toc-tic)
 
                     
     def train_epoch(self, epoch, dataloader, criterion):
@@ -190,9 +212,7 @@ class FCMSANet(BasicVarFCNet):
     def _msa_step_1(self, x, label):
         output = self.forward(x)
         _, ind = torch.max(output,1)
-        for i in range(len(label)):
-            if ind[i].data == label[i].data:
-                self.correct_pred +=1
+        self.correct_pred += torch.sum(ind==label).item()
 
 
     def _msa_step_2(self,epoch,criterion,label):
@@ -262,12 +282,16 @@ class FCMSANet(BasicVarFCNet):
                 self.layers_dict[layer].rho = value
 
 
-    def test(self, dataloader, test_set_size):
+    def test(self, dataloader, test_set_size, print_output=True):
         """ Evaluate the accuracy of the net on the test set.
         
         Parameters:
                 dataloader (torch.Dataloader): Container for the test samples.
                 test_set_size (int): Size of the test set.
+                print_output (bool): Whether to print output (default is True).
+        
+        Returns:
+                correct_pred (int): Number of correct predicted test samples.
         """
 
         with torch.no_grad():
@@ -280,10 +304,11 @@ class FCMSANet(BasicVarFCNet):
                 
                 prediction = self.forward(data)
                 _, ind = torch.max(prediction,1)
-                for i in range(len(label)):
-                    if ind[i].data == label[i].data:
-                        correct_pred +=1
-            print('Correct predictions: '+str(correct_pred/test_set_size))
+                correct_pred += torch.sum(ind==label).item()
+
+            if print_output:
+                print('Correct predictions: '+str(correct_pred/test_set_size))
+        return correct_pred
 
 
 
@@ -296,16 +321,21 @@ class FCMSANet(BasicVarFCNet):
 
 class BasicBackpropNet(nn.Module):
     """ Base class for a FC Net with backpropagation training.
+
+    Parameters:
+            track_test (bool): Whether to track the test results.
     
     Methods:
             forward(x): Forward propagation of x. Needs to be implemented for subclasses.
             train(dataloader, num_epochs): Trains the net using backpropagation.
             train_epoch(epoch, optimizer, dataloader, criterion, train_size): Train the net for a single epoch.
             test(dataloader, test_set_size):  Evaluate the accuracy of the net on the test set.
+            set_test_tracking(value): Set the option to track test results per epoch.
     """
 
     def __init__(self):
         super().__init__()
+        self.track_test = False
 
     def forward(self, x):
         """ Forward propagation of x. Needs to be implemented for subclasses.
@@ -316,7 +346,7 @@ class BasicBackpropNet(nn.Module):
 
         pass
 
-    def train(self, num_epochs, dataloader):
+    def train(self, num_epochs, dataloader, testloader=None, print_output=True):
         """ Trains the net using backpropagation.
 
         Introduces new attributes:
@@ -324,8 +354,10 @@ class BasicBackpropNet(nn.Module):
                 avg_correct_pred (torch.tensor): Average correct predictions per epoch.
 
         Parameters:
-                dataloader (torch.Dataloader): Container for training samples.
                 num_epochs (int): Number of epochs for training the net.
+                dataloader (torch.Dataloader): Container for training samples.
+                testloader (torch.Dataloader): Container for test samples if track_test is True (default is None).
+                print_output (bool): Whether to print output (default is True).
         """
 
         tic=timeit.default_timer()
@@ -334,15 +366,21 @@ class BasicBackpropNet(nn.Module):
         train_size = len(dataloader.dataset)*0.8
         self.avg_losses = torch.zeros(num_epochs)
         self.avg_correct_pred = torch.zeros(num_epochs)
+        if self.track_test:
+            self.test_results = torch.zeros(num_epochs)
+            test_size = len(testloader.dataset)*0.2
         for epoch in range(num_epochs):
 
-            self.train_epoch(epoch, optimizer, dataloader, criterion, train_size)
+            self.train_epoch(epoch, optimizer, dataloader, criterion, train_size, print_output)
+            if self.track_test:
+                self.test_results[epoch] = self.test(testloader, test_size, print_output)
 
         toc=timeit.default_timer()
-        print('Time elapsed: ',toc-tic)
+        if print_output:
+            print('Time elapsed: ',toc-tic)
 
 
-    def train_epoch(self, epoch, optimizer, dataloader, criterion, train_size):
+    def train_epoch(self, epoch, optimizer, dataloader, criterion, train_size, print_output=True):
         """ Train the net for a single epoch.
 
         Parameters:
@@ -351,37 +389,47 @@ class BasicBackpropNet(nn.Module):
                 dataloader (torch.Dataloader): Container for training samples.
                 criterion (): The Loss function.
                 train_size (int): Size of the training set.
+                print_output (bool): Whether to print output (default is True).
         """
 
-        if epoch % 10 == 0:
+        if print_output and epoch % 10 == 0:
             print("#  Epoch  #  Avg-Loss  #  Train-Acc  ###############")
         correct_pred = 0
         loss_sum = 0
         for _, (data, target) in enumerate(dataloader):
             output = self.forward(data)
-            #print(output)
             loss = criterion(output, target)
             _, ind = torch.max(output,1)
-            for i in range(len(target)):
-                if ind[i].data == target[i].data:
-                    correct_pred +=1
+            correct_pred += torch.sum(ind==target).item()
 
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
             loss_sum = loss_sum + loss.data
-            
-        print("#  %d  #  %f  #  %f  #" % (epoch+1, loss_sum/train_size, correct_pred/train_size))
+
+        if print_output:    
+            print("#  %d  #  %f  #  %f  #" % (epoch+1, loss_sum/train_size, correct_pred/train_size))
         self.avg_correct_pred[epoch] = correct_pred/train_size
         self.avg_losses[epoch] =  loss_sum/train_size
 
+    def set_test_tracking(self, value):
+        """ Set the option to track test results per epoch.
+        
+        Parameters:
+                value (bool): Whether to track the test results."""
 
-    def test(self, dataloader, test_set_size):
+        self.track_test = value
+
+    def test(self, dataloader, test_set_size, print_output=True):
         """ Evaluate the accuracy of the net on the test set.
         
         Parameters:
                 dataloader (torch.Dataloader): Container for the test samples.
                 test_set_size (int): Size of the test set.
+                print_output (bool): Whether to print output (default is True).
+
+        Returns:
+                correct_pred (int): Number of correct predicted test samples.
         """
 
         with torch.no_grad():
@@ -389,10 +437,10 @@ class BasicBackpropNet(nn.Module):
             for _, (data, label) in enumerate(dataloader):
                 prediction = self.forward(data)
                 _, ind = torch.max(prediction,1)
-                for i in range(len(label)):
-                    if ind[i].data == label[i].data:
-                        correct_pred +=1
-            print('Correct predictions: '+str(correct_pred/test_set_size))
+                correct_pred += torch.sum(ind==label).item()
+            if print_output:
+                print('Correct predictions: '+str(correct_pred/test_set_size))
+        return correct_pred
 
     
 #################################################################
@@ -407,8 +455,26 @@ class ResAntiSymNet(BasicBackpropNet):
     
     Attributes:
             layer_keys (list of str): List of layer names.
-            num_layers (int): """
+            num_layers (int): Number of FC Layers
+            gamma (float): Initialization parameter for AntiSymLayers
+            h (float): Time step size of explicit Euler
+            has_bias (bool): Whether to use biases 
+            
+    Methods:
+            forward(x): Forward propagation of the sample x.
+    """
+
     def __init__(self, features, classes, num_layers, gamma, h, bias=False, hidden_size=None):
+        """ Parameters:
+                features (int): Number of features
+                classes (int): Number of classes
+                num_layers (int): Number of FC Layers
+                gamma (float): Initialization parameter for AntiSymLayers
+                h (float): Time step size of explicit Euler
+                bias (bool): Whether to use biases (default is False)
+                hidden_size (int): Optional size of the hidden layers, if different from features or classes (default is None)
+        """
+
         super().__init__()
         if hidden_size == None:
             if features != classes:
@@ -441,9 +507,10 @@ class ResAntiSymNet(BasicBackpropNet):
         self.gamma = gamma
         self.h = h
         self.has_bias = bias
-        self.init_layers(features, classes, hidden_size)
+        self._init_layers(features, classes, hidden_size)
 
-    def init_layers(self, features, classes, hidden_size):
+
+    def _init_layers(self, features, classes, hidden_size):
         if hidden_size != None:
             start = 0
             if features != hidden_size:
@@ -464,6 +531,12 @@ class ResAntiSymNet(BasicBackpropNet):
 
 
     def forward(self, x):
+        """ Forward propagation of the sample x.
+        
+        Parameters:
+                x (torch.FloatTensor): Tensor containing a batch of training samples.
+        """
+
         start = 0
         if self.layer_keys[0] == 'FC' or self.layer_keys[0] == 'FC0':
             x = F.relu(getattr(self, self.layer_keys[0])(x)) 
@@ -482,19 +555,42 @@ class ResAntiSymNet(BasicBackpropNet):
 #################################################################
 
 class FCNet(BasicBackpropNet):
+    """ Simple fully connected net with backpropagation training. Used as reference.
+    
+    Attributes:
+            num_layers (int): Number of layers.
+            has_bias (bool): Whether the layers have biases.
+            layer_keys (list of str): List of layer names.
+            
+    Methods:
+            forward(x): Forward propagation of x."""
+
     def __init__(self, num_layers, layers, bias=False):
+        """Parameters:
+                num_layers (int): Number of layers.
+                layers (list of int): List of number of neurons per layer. 
+                        len(layers) needs to be == num_layers+1
+                bias (bool): Whether to use biases (default is False).
+        """
+
         super().__init__()
         self.num_layers = num_layers
         self.has_bias = bias
         self.layer_keys = ['FC'+str(i) for i in range(num_layers)]
-        self.init_layers(layers)
+        self._init_layers(layers)
 
-    def init_layers(self, layers):
+    def _init_layers(self, layers):
         for layer in range(self.num_layers):
             setattr(self,self.layer_keys[layer],nn.Linear(layers[layer],layers[layer+1],bias=self.has_bias))
 
 
     def forward(self, x):
+        """ Forward propagation of x.
+        
+        Parameters:
+                x (torch.FloatTensor): Tensor containing a batch of training samples.
+        """
+
         for layer in range(self.num_layers-1):
             x = F.relu(getattr(self, self.layer_keys[layer])(x))
         x = getattr(self, self.layer_keys[self.num_layers-1])(x)
@@ -509,13 +605,33 @@ class FCNet(BasicBackpropNet):
 #################################################################
 
 class ResFCNet(FCNet):
+    """ Simple ResNet with backpropagation training. Used as reference.
+    
+    Attributes:
+            layers (list of int): List containing the numbers of neurons in hidden layers.
+            
+    Methods:
+            forward(x): Forward propagation of x.
+    """
+
     def __init__(self, num_layers, layers, bias=False):
+        """Parameters:
+                num_layers (int): Number of layers.
+                layers (list of int): List of number of neurons per layer. 
+                        len(layers) needs to be == num_layers+1
+                bias (bool): Whether to use biases (default is False).
+        """
         super().__init__(num_layers, layers, bias)
         self.layers = layers
         for i in range(num_layers-1):
             assert layers[i] <= layers[i+1], 'Decreasing hidden layer size!'
 
     def forward(self, x):
+        """ Forward propagation of x.
+        
+        Parameters:
+                x (torch.FloatTensor): Tensor containing a batch of training samples.
+        """
         for layer in range(self.num_layers-1):
             if x.size()[1] != self.layers[layer+1]:
                 additional_zeros = self.layers[layer+1] - x.size()[1]
@@ -538,10 +654,12 @@ class ResFCNet(FCNet):
 
 
 class ConvNet(BasicBackpropNet):
+    """ Simple Convolutional neural net with backpropagation training. Used as reference.
+    
+    Attributes:"""
     def __init__(self, num_conv, num_channels, subsample_points, num_fc, sizes_fc):
         super().__init__()
         self.num_conv = num_conv
-        #self.has_bias = bias
         self.conv_keys = ['Conv'+str(i) for i in range(num_conv)]
         self._init_conv_layers(num_channels, subsample_points)
         self.num_fc = num_fc
@@ -562,6 +680,11 @@ class ConvNet(BasicBackpropNet):
             setattr(self, self.fc_keys[i], nn.Linear(sizes_fc[i], sizes_fc[i+1], bias=False))
             
     def forward(self, x):
+        """ Forward propagation of x.
+        
+        Parameters:
+                x (torch.FloatTensor): Tensor containing a batch of training samples.
+        """
         for layer in range(self.num_conv):
             x = F.relu(getattr(self, self.conv_keys[layer])(x))
         x = x.view(x.size()[0],-1)
@@ -624,6 +747,11 @@ class BasicVarConvNet(BasicVarFCNet):
                 
         
     def forward(self, x):
+        """ Forward propagation of x. Needs to be implemented for subclasses.
+        
+        Parameters:
+                x (torch.FloatTensor): Tensor containing a batch of training samples.
+        """
         pass
     
 
@@ -635,6 +763,11 @@ class ConvMSANet(BasicVarConvNet):
 
         
     def forward(self, x):
+        """ Forward propagation of x and registering of the intermediate values.
+        
+        Parameters:
+                x (torch.FloatTensor): Tensor containing a batch of training samples.
+        """
         for layer in range(self.num_conv):
             x_key = 'x_'+self.conv_keys[layer]
             self.x_dict.update({x_key:x.clone().detach().requires_grad_(True)})
@@ -643,7 +776,7 @@ class ConvMSANet(BasicVarConvNet):
         x_key = 'x_'+self.conv_keys[self.num_conv]
         self.x_dict.update({x_key:x.clone().detach().requires_grad_(True)})
 
-        x = x.view(-1, self.num_flat_features(x))
+        x = x.view(-1, self._num_flat_features(x))
 
         for layer in range(self.num_fc-1):
             #print(x)
@@ -657,7 +790,7 @@ class ConvMSANet(BasicVarConvNet):
         self.x_dict.update({x_key:x.clone().detach().requires_grad_(True)})
         return x
     
-    def num_flat_features(self, x):
+    def _num_flat_features(self, x):
         size = x.size()[1:]  # all dimensions except the batch dimension
         num_features = 1
         for s in size:
@@ -666,14 +799,16 @@ class ConvMSANet(BasicVarConvNet):
     
 
 
-    def train_msa(self, num_epochs, dataloader):
+    def train_msa(self, num_epochs, dataloader, testloader=None):
         tic=timeit.default_timer()
         criterion = nn.CrossEntropyLoss()
         self.avg_losses = torch.zeros(num_epochs)
         self.avg_correct_pred = torch.zeros(num_epochs)
         self.batch_size = dataloader.batch_size
         train_size = len(dataloader.dataset)
-        
+        if self.track_test:
+            self.test_results = torch.zeros(num_epochs)
+            test_size = len(testloader.dataset)
         for epoch in range(num_epochs):
             if epoch % 10 == 0:
                 print("#  Epoch  #  Avg-Loss  #  Train-Acc  ###############")
@@ -686,7 +821,8 @@ class ConvMSANet(BasicVarConvNet):
             print("#  %d  #  %f  #  %f  #" % (epoch+1, self.loss_sum/train_size, self.correct_pred/train_size))
             self.avg_correct_pred[epoch] = self.correct_pred/train_size
             self.avg_losses[epoch] =  self.loss_sum/train_size
-            
+            if self.track_test:
+                self.test_results[epoch] = self.test(testloader, test_size)
         toc=timeit.default_timer()
         print('Time elapsed: ',toc-tic)
                     
@@ -721,9 +857,7 @@ class ConvMSANet(BasicVarConvNet):
     def _msa_step_1(self, x, label):
         output = self.forward(x)
         _, ind = torch.max(output,1)
-        for i in range(len(label)):
-            if ind[i].data == label[i].data:
-                self.correct_pred +=1
+        self.correct_pred += torch.sum(ind == label).item()
 
 
     def _msa_step_2(self,epoch,criterion,label):
@@ -818,7 +952,5 @@ class ConvMSANet(BasicVarConvNet):
                 #print(ind)
                 #print(label)
                 #_, ind_label = torch.max(label, 1)
-                for i in range(len(label)):
-                    if ind[i].data == label[i].data:
-                        correct_pred +=1
+                correct_pred += torch.sum(ind == label).item()
             print('Test set accuracy: ', correct_pred/test_set_size)

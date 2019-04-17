@@ -81,6 +81,6 @@ def makeMoonsDataset(dataset_size, batch_size):
 
     train_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, 
                                            sampler=train_sampler)
-    test_loader = torch.utils.data.DataLoader(dataset, batch_size=1,
+    test_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size,
                                                 sampler=test_sampler)
     return train_loader, test_loader
