@@ -68,7 +68,7 @@ class Tanh2dLayer(nn.Module):
         return res
 
 class CustomBatchNorm1d(nn.BatchNorm1d):
-    def __init__(self, num_features, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True):
+    def __init__(self, num_features, eps=1e-05, momentum=0.1, affine=False, track_running_stats=True):#True
         super().__init__(num_features, eps, momentum, affine, track_running_stats)
         self.name = 'BatchNorm'
 
@@ -79,7 +79,7 @@ class CustomBatchNorm1d(nn.BatchNorm1d):
 
 
 class CustomBatchNorm2d(nn.BatchNorm2d):
-    def __init__(self, num_features, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True):
+    def __init__(self, num_features, eps=1e-05, momentum=0.1, affine=False, track_running_stats=True):#True
         super().__init__(num_features, eps, momentum, affine, track_running_stats)
         self.name = 'BatchNorm'
 

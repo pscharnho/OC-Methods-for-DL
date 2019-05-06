@@ -322,7 +322,7 @@ class FCMSANet(BasicVarFCNet):
 class BasicBackpropNet(nn.Module):
     """ Base class for a FC Net with backpropagation training.
 
-    Parameters:
+    Attributes:
             track_test (bool): Whether to track the test results.
     
     Methods:
