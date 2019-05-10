@@ -362,7 +362,7 @@ class BasicBackpropNet(nn.Module):
 
         tic=timeit.default_timer()
         criterion = nn.CrossEntropyLoss()#reduction='sum'
-        optimizer = torch.optim.SGD(self.parameters(), lr=0.1)
+        optimizer = torch.optim.SGD(self.parameters(), lr=0.5)
         train_size = len(dataloader.dataset)*0.8
         self.avg_losses = torch.zeros(num_epochs)
         self.avg_correct_pred = torch.zeros(num_epochs)
