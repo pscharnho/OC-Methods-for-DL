@@ -362,13 +362,13 @@ class BasicBackpropNet(nn.Module):
 
         tic=timeit.default_timer()
         criterion = nn.CrossEntropyLoss()#reduction='sum'
-        optimizer = torch.optim.SGD(self.parameters(), lr=0.5)
-        train_size = len(dataloader.dataset)*0.8
+        optimizer = torch.optim.SGD(self.parameters(), lr=0.1)
+        train_size = len(dataloader.dataset)#*0.8
         self.avg_losses = torch.zeros(num_epochs)
         self.avg_correct_pred = torch.zeros(num_epochs)
         if self.track_test:
             self.test_results = torch.zeros(num_epochs)
-            test_size = len(testloader.dataset)*0.2
+            test_size = len(testloader.dataset)#*0.2
         for epoch in range(num_epochs):
 
             self.train_epoch(epoch, optimizer, dataloader, criterion, train_size, print_output)
@@ -954,3 +954,4 @@ class ConvMSANet(BasicVarConvNet):
                 #_, ind_label = torch.max(label, 1)
                 correct_pred += torch.sum(ind == label).item()
             print('Test set accuracy: ', correct_pred/test_set_size)
+        return correct_pred
