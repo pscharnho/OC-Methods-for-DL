@@ -363,12 +363,18 @@ class BasicBackpropNet(nn.Module):
         tic=timeit.default_timer()
         criterion = nn.CrossEntropyLoss()#reduction='sum'
         optimizer = torch.optim.SGD(self.parameters(), lr=0.1)
-        train_size = len(dataloader.dataset)#*0.8
+        if dataloader.name == "MNIST":
+            train_size = len(dataloader.dataset)
+        else:
+            train_size = len(dataloader.dataset)*0.8
         self.avg_losses = torch.zeros(num_epochs)
         self.avg_correct_pred = torch.zeros(num_epochs)
         if self.track_test:
             self.test_results = torch.zeros(num_epochs)
-            test_size = len(testloader.dataset)#*0.2
+            if dataloader.name == "MNIST":
+                test_size = len(testloader.dataset)#*0.2
+            else:
+                test_size = len(testloader.dataset)*0.2
         for epoch in range(num_epochs):
 
             self.train_epoch(epoch, optimizer, dataloader, criterion, train_size, print_output)
@@ -656,8 +662,24 @@ class ResFCNet(FCNet):
 class ConvNet(BasicBackpropNet):
     """ Simple Convolutional neural net with backpropagation training. Used as reference.
     
-    Attributes:"""
+    Attributes:
+            num_conv (int): Number of convolutional layers.
+            conv_keys (list of str): List of the convolutional layers names.
+            num_fc (int): Number of fully-connected layers.
+            fc_keys (list of str): List of the fully connected layers names.
+    
+    Methods:
+            forward(x): Forward propagation of x.
+    """
+
     def __init__(self, num_conv, num_channels, subsample_points, num_fc, sizes_fc):
+        """Parameters:
+                num_conv (int): Number of convolutional layers.
+                num_channels (list of int): List containing the numbers of filters for each conv layer. 
+                subsample_points (list of int): Layer indices where to use a stride of 2.
+                num_fc (int): Number of fully-connected layers.
+                sizes_fc (list of int): List with numbers of neurons for each fc layer. 
+        """
         super().__init__()
         self.num_conv = num_conv
         self.conv_keys = ['Conv'+str(i) for i in range(num_conv)]
@@ -704,7 +726,29 @@ class ConvNet(BasicBackpropNet):
 
 
 class BasicVarConvNet(BasicVarFCNet):
+    """ Base class for Convolutional neural net with MSA training.
+    
+    Attributes:
+            num_conv (int): Number of convolutional layers.
+            conv_keys (list of str): List of the convolutional layers names.
+            num_fc (int): Number of fully-connected layers.
+            fc_keys (list of str): List of the fully connected layers names.
+    
+    Methods:
+            forward(x): Forward propagation of x.
+    """
+
     def __init__(self, num_conv, num_channels, subsample_points, num_fc, sizes_fc, batchnorm=True, test=False):
+        """Parameters:
+                num_conv (int): Number of convolutional layers.
+                num_channels (list of int): List containing the numbers of filters for each conv layer. 
+                subsample_points (list of int): Layer indices where to use a stride of 2.
+                num_fc (int): Number of fully-connected layers.
+                sizes_fc (list of int): List with numbers of neurons for each fc layer. 
+                batchnorm (bool): Whether to use batchnorm layers (default is True).
+                test (bool): Whether to use a specific initialization of the layer 
+                        weights (default is False)
+        """
         super(BasicVarConvNet, self).__init__(num_fc, sizes_fc, False, batchnorm, test)
         if batchnorm:
             self.num_conv = num_conv * 3 - 1 # Additional counting for batchnorm and activation layers
@@ -757,7 +801,24 @@ class BasicVarConvNet(BasicVarFCNet):
 
 
 class ConvMSANet(BasicVarConvNet):
-    '''ConvNet class with variable size, specified in the constructor'''
+    '''ConvNet class with variable size, specified in the constructor
+    
+    Attributes:
+            num_conv (int): Number of convolutional layers.
+            conv_keys (list of str): List of the convolutional layers names.
+            num_fc (int): Number of fully-connected layers.
+            fc_keys (list of str): List of the fully connected layers names.
+    
+    Methods:
+            forward(x): Forward propagation of x and registering of the intermediate values.
+            train_msa(num_epochs, dataloader, test_loader): Trains the net using a modified version of the MSA algorithm.
+            train_epoch(epoch, dataloader, criterion): Train the net for a single epoch.
+            set_ema_alpha(value): Set the value for EMA alpha in linear and conv layers.
+            decay_ema_alpha(rate): Decay the EMA alpha in every layer with a certain rate.
+            set_rho(value): Set the rho value for minimizing the error term in the MSA.
+            test(dataloader, test_set_size): Evaluate the accuracy of the net on the test set.
+    '''
+
     def __init__(self, num_conv, num_channels, subsample_points, num_fc, sizes_fc, batchnorm=True, test=False):
         super(ConvMSANet, self).__init__(num_conv, num_channels, subsample_points, num_fc, sizes_fc, batchnorm, test)
 
@@ -800,6 +861,18 @@ class ConvMSANet(BasicVarConvNet):
 
 
     def train_msa(self, num_epochs, dataloader, testloader=None):
+        """ Trains the net using a modified version of the MSA algorithm.
+
+        Introduces new attributes:
+                avg_losses (torch.tensor): Average loss per epoch.
+                avg_correct_pred (torch.tensor): Average correct predictions per epoch.
+                batch_size (int): Batchsize specified by the dataloader.
+
+        Parameters:
+                num_epochs (int): Number of epochs for training the net.
+                dataloader (torch.Dataloader): Container for training samples.
+                testloader (torch.Dataloader): Container for test samples if self.track_test is True (default is None).
+        """
         tic=timeit.default_timer()
         criterion = nn.CrossEntropyLoss()
         self.avg_losses = torch.zeros(num_epochs)
@@ -839,20 +912,11 @@ class ConvMSANet(BasicVarConvNet):
         self.loss_sum = 0
         for _, (data, label) in enumerate(dataloader):
             # MSA step 1
-            #tic=timeit.default_timer()
             self._msa_step_1(data,label)
-            #toc=timeit.default_timer()
-            #print('Time MSA1 elapsed: ',toc-tic)
             # MSA step 2
-            #tic=timeit.default_timer()
             self._msa_step_2(epoch,criterion,label)
-            #toc=timeit.default_timer()
-            #print('Time MSA2 elapsed: ',toc-tic)
             # MSA step 3
-            #tic=timeit.default_timer()
             self._msa_step_3()
-            #toc=timeit.default_timer()
-            #print('Time MSA3 elapsed: ',toc-tic)
 
     def _msa_step_1(self, x, label):
         output = self.forward(x)
@@ -898,7 +962,6 @@ class ConvMSANet(BasicVarConvNet):
 
 
     def _msa_step_3(self):
-        
         for layer in range(self.num_fc):
             if self.layers_dict[self.fc_keys[layer]].name == 'Linear':
                 self.layers_dict[self.fc_keys[layer]].set_weights_and_biases(layer, self.x_dict, self.lambda_dict)
@@ -906,8 +969,8 @@ class ConvMSANet(BasicVarConvNet):
             if self.layers_dict[self.conv_keys[layer]].name == 'Conv':
                 self.layers_dict[self.conv_keys[layer]].set_weights(layer, self.x_dict, self.lambda_dict)
 
-    def set_ema_alpha(self,value):
-        """ Set the value for EMA alpha in linear and conv layers
+    def set_ema_alpha(self, value):
+        """ Set the value for EMA alpha in linear and conv layers.
         
         Parameters:
                 value (float): The new alpha value for all linear and conv layers
@@ -919,7 +982,7 @@ class ConvMSANet(BasicVarConvNet):
 
 
     def decay_ema_alpha(self, rate):
-        """ Decay the EMA alpha in every layer with a certain rate
+        """ Decay the EMA alpha in every layer with a certain rate.
         
         Parameters:
                 rate (float): Rate of decay.
@@ -930,7 +993,7 @@ class ConvMSANet(BasicVarConvNet):
                 self.layers_dict[layer].ema_alpha = 1 - (1 - self.layers_dict[layer].ema_alpha) * rate
 
 
-    def set_rho(self,value):
+    def set_rho(self, value):
         """ Set the rho value for minimizing the error term in the MSA.
         
         Parameters:
@@ -943,15 +1006,20 @@ class ConvMSANet(BasicVarConvNet):
 
 
     def test(self, dataloader, test_set_size):
+        """ Evaluate the accuracy of the net on the test set.
+        
+        Parameters:
+                dataloader (torch.Dataloader): Container for the test samples.
+                test_set_size (int): Size of the test set.
+
+        Returns:
+                correct_pred (int): Number of correct predicted test samples.
+        """
         with torch.no_grad():
             correct_pred = 0
             for _, (data, label) in enumerate(dataloader):
                 prediction = self.forward(data)
                 _, ind = torch.max(prediction,1)
-                #print(prediction)
-                #print(ind)
-                #print(label)
-                #_, ind_label = torch.max(label, 1)
                 correct_pred += torch.sum(ind == label).item()
             print('Test set accuracy: ', correct_pred/test_set_size)
         return correct_pred

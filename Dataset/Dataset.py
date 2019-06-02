@@ -17,8 +17,7 @@ class MNISTDataset(torch.utils.data.Dataset):
         self.len = len(self.data['label'].values)
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
             
-        self.features = torch.tensor(self.data.drop('label',axis=1).values.astype(np.float32), device=self.device).reshape(-1,1,28,28)/255   #.reshape(-1,784)/255 
-        #self.labels = self.one_hot(self.data['label'].values,10)
+        self.features = torch.tensor(self.data.drop('label',axis=1).values.astype(np.float32), device=self.device).reshape(-1,1,28,28)/255   
         self.labels = self.data['label']
     
     def __len__(self):
@@ -35,11 +34,19 @@ class MNISTDataset(torch.utils.data.Dataset):
 
 
 def loadMNIST(root_train, root_test):
+    """ Creates dataloaders for training and testing with the MNIST dataset.
+    
+    Parameters:
+            root_train (str): Path to the training data. 
+            root_test (str): Path to the test data.
+    """
     train = MNISTDataset(root_train)
     train_loader = torch.utils.data.DataLoader(train, batch_size=100)
+    train_loader.name = "MNIST"
 
     test = MNISTDataset(root_test)
     test_loader = torch.utils.data.DataLoader(test, batch_size=100)
+    test_loader.name = "MNIST"
     return train_loader, test_loader
 
 
@@ -58,10 +65,14 @@ class MoonsDataset(torch.utils.data.Dataset):
         return self.features[idx], self.labels[idx]
 
 def makeMoonsDataset(dataset_size, batch_size):
+    """ Creates dataloaders for training and testing with the Moons dataset.
+    
+    Parameters:
+            dataset_size (int): Number of created samples.
+            batch_size (int): Number of samples in one batch.
+    """
     torch.manual_seed(0)
-    #dataset_size = 1000
     dataset = MoonsDataset(dataset_size)
-    #batch_size = 100
     test_split = .2
     shuffle_dataset = True
     random_seed= 42
@@ -83,4 +94,6 @@ def makeMoonsDataset(dataset_size, batch_size):
                                            sampler=train_sampler)
     test_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size,
                                                 sampler=test_sampler)
+    train_loader.name = "Moons"
+    test_loader.name = "Moons"
     return train_loader, test_loader
